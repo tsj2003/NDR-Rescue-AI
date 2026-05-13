@@ -53,8 +53,9 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           agent_id: BOLNA_AGENT_ID,
           recipient_phone_number: phoneNumber,
-          bypass_call_guardrails: true, // allow calls any time in dev
-          user_data: {
+          bypass_call_guardrails: true,
+          // Bolna V2: 'variables' injects into {placeholder} slots in agent prompt
+          variables: {
             customerName: shipment.customerName,
             trackingNumber: shipment.trackingNumber,
             dropAddress: shipment.dropAddress,

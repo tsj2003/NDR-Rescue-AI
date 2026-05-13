@@ -44,7 +44,7 @@ async function bolnaFetch(endpoint: string, options: RequestInit) {
   }
 }
 
-async function listAgents(): Promise<{ agent_id: string; agent_name: string }[]> {
+async function listAgents(): Promise<{ agent_id?: string; id?: string; agent_name?: string; name?: string }[]> {
   try {
     const res = await bolnaFetch('/v2/agent/all', { method: 'GET' })
     return Array.isArray(res) ? res : res.agents ?? []
@@ -67,16 +67,17 @@ async function setupAgent(): Promise<string> {
 
   console.log('🔍 Checking for existing agent…')
   const agents = await listAgents()
-  const existing = agents.find((a) => a.agent_name === agentName)
+  const existing = agents.find((a) => a.agent_name === agentName || a.name === agentName)
 
   let agentId: string
   if (existing) {
-    console.log(`♻️  Updating existing agent: ${existing.agent_id}`)
-    await bolnaFetch(`/v2/agent/${existing.agent_id}`, {
+    const id = (existing.id ?? existing.agent_id)!
+    console.log(`♻️  Updating existing agent: ${id}`)
+    await bolnaFetch(`/v2/agent/${id}`, {
       method: 'PUT',
       body: JSON.stringify(config),
     })
-    agentId = existing.agent_id
+    agentId = id
     console.log(`✅ Agent updated: ${agentId}`)
   } else {
     console.log('✨ Creating new agent…')
