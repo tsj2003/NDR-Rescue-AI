@@ -11,6 +11,17 @@ type Shipment = {
   failureReason: string; state: string; updatedAt: string
 }
 
+type NewShipment = { customerName: string; customerPhone: string; dropAddress: string; failureReason: string }
+
+const FAILURE_REASONS = [
+  'ADDRESS_NOT_FOUND',
+  'CUSTOMER_NOT_AVAILABLE',
+  'GATE_LOCKED',
+  'REFUSED_DELIVERY',
+  'INCORRECT_ADDRESS',
+  'RESCHEDULED_BY_CUSTOMER',
+]
+
 const STATE_LABELS: Record<string, string> = {
   FAILED_ATTEMPT: 'Failed Attempt',
   CALL_SCHEDULED: 'Call Scheduled',
@@ -86,9 +97,18 @@ export default function ShipmentsPage() {
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState('All')
   const [triggering, setTriggering] = useState<string | null>(null)
+  const [showModal, setShowModal] = useState(false)
+  const [form, setForm] = useState<NewShipment>({ customerName: '', customerPhone: '', dropAddress: '', failureReason: 'ADDRESS_NOT_FOUND' })
+  const [submitting, setSubmitting] = useState(false)
+  const [editingPhone, setEditingPhone] = useState<{ id: string; value: string } | null>(null)
+
+  async function reloadShipments() {
+    const d = await fetch('/api/shipments').then(r => r.json())
+    setShipments(Array.isArray(d) ? d : d.shipments ?? [])
+  }
 
   useEffect(() => {
-    fetch('/api/shipments').then(r => r.json()).then(d => { setShipments(Array.isArray(d) ? d : d.shipments ?? []); setLoading(false) }).catch(() => setLoading(false))
+    reloadShipments().then(() => setLoading(false))
   }, [])
 
   async function triggerCall(shipmentId: string) {
@@ -98,8 +118,7 @@ export default function ShipmentsPage() {
       const data = await res.json()
       if (res.ok) {
         toast.success(`Call queued — ID: ${data.callId?.slice(0, 8)}…`, { duration: 4000 })
-        const updated = await fetch('/api/shipments').then(r => r.json())
-        setShipments(Array.isArray(updated) ? updated : updated.shipments ?? [])
+        await reloadShipments()
       } else {
         toast.error(data.error || 'Failed to trigger call')
       }
@@ -107,6 +126,46 @@ export default function ShipmentsPage() {
       toast.error('Connection error')
     } finally {
       setTriggering(null)
+    }
+  }
+
+  async function addShipment() {
+    if (!form.customerName || !form.customerPhone || !form.dropAddress) {
+      toast.error('Name, phone and address are required'); return
+    }
+    setSubmitting(true)
+    try {
+      const res = await fetch('/api/shipments/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success(`Shipment ${data.shipment.trackingNumber} created!`)
+        setShowModal(false)
+        setForm({ customerName: '', customerPhone: '', dropAddress: '', failureReason: 'ADDRESS_NOT_FOUND' })
+        await reloadShipments()
+      } else {
+        toast.error(data.error || 'Failed to create shipment')
+      }
+    } catch {
+      toast.error('Connection error')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function savePhone(id: string, phone: string) {
+    if (!phone.trim()) { setEditingPhone(null); return }
+    try {
+      const res = await fetch(`/api/shipments/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customerPhone: phone }) })
+      if (res.ok) {
+        toast.success('Phone updated ✅')
+        await reloadShipments()
+      } else {
+        toast.error('Failed to update phone')
+      }
+    } catch {
+      toast.error('Connection error')
+    } finally {
+      setEditingPhone(null)
     }
   }
 
@@ -131,7 +190,60 @@ export default function ShipmentsPage() {
       <link href={GFONT} rel="stylesheet" />
       <link href={GICON} rel="stylesheet" />
       <style>{`* { font-family: 'Inter', sans-serif; box-sizing: border-box; } body { margin: 0; background: #f8fafc; }
-      tr:hover td { background: #fafafa; }`}</style>
+      tr:hover td { background: #fafafa; }
+      .modal-input { width: 100%; height: 38px; padding: 0 12px; border: 1px solid #e4e2e4; border-radius: 8px; font-size: 13px; outline: none; color: #1b1b1d; }
+      .modal-input:focus { border-color: #0f172a; box-shadow: 0 0 0 3px rgba(15,23,42,0.08); }
+      .modal-select { width: 100%; height: 38px; padding: 0 12px; border: 1px solid #e4e2e4; border-radius: 8px; font-size: 13px; outline: none; color: #1b1b1d; background: #fff; }
+      `}</style>
+
+      {/* Add Shipment Modal */}
+      {showModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          onClick={() => setShowModal(false)}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 32, width: 440, boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a' }}>Add Shipment</h2>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9ca3af', fontSize: 22 }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>CUSTOMER NAME *</label>
+                <input id="add-customer-name" className="modal-input" placeholder="e.g. Rahul Sharma"
+                  value={form.customerName} onChange={e => setForm(f => ({ ...f, customerName: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>PHONE NUMBER *</label>
+                <input id="add-customer-phone" className="modal-input" placeholder="e.g. 9876543210"
+                  value={form.customerPhone} onChange={e => setForm(f => ({ ...f, customerPhone: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>DELIVERY ADDRESS *</label>
+                <input id="add-drop-address" className="modal-input" placeholder="e.g. 42 MG Road, Bengaluru"
+                  value={form.dropAddress} onChange={e => setForm(f => ({ ...f, dropAddress: e.target.value }))} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>FAILURE REASON</label>
+                <select id="add-failure-reason" className="modal-select"
+                  value={form.failureReason} onChange={e => setForm(f => ({ ...f, failureReason: e.target.value }))}>
+                  {FAILURE_REASONS.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
+                </select>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+              <button onClick={() => setShowModal(false)}
+                style={{ flex: 1, height: 40, border: '1px solid #e4e2e4', borderRadius: 8, background: '#fff', fontSize: 13, fontWeight: 500, cursor: 'pointer', color: '#374151' }}>
+                Cancel
+              </button>
+              <button id="add-shipment-submit" onClick={addShipment} disabled={submitting}
+                style={{ flex: 2, height: 40, border: 'none', borderRadius: 8, background: submitting ? '#374151' : '#0f172a', color: '#fff', fontSize: 13, fontWeight: 600, cursor: submitting ? 'not-allowed' : 'pointer' }}>
+                {submitting ? 'Creating…' : '+ Add Shipment'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', minHeight: '100vh' }}>
         <Sidebar active="Shipments" />
         <main style={{ marginLeft: 240, flex: 1, minHeight: '100vh' }}>
@@ -151,11 +263,12 @@ export default function ShipmentsPage() {
                   placeholder="Search by tracking, customer…"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
-                  style={{ height: 36, paddingLeft: 36, paddingRight: 12, border: '1px solid #e4e2e4', borderRadius: 8, fontSize: 13, color: '#1b1b1d', background: '#fff', outline: 'none', width: 240 }}
+                  style={{ height: 36, paddingLeft: 36, paddingRight: 12, border: '1px solid #e4e2e4', borderRadius: 8, fontSize: 13, color: '#1b1b1d', background: '#fff', outline: 'none', width: 220 }}
                 />
               </div>
-              <button onClick={() => toast.info('Export coming soon!')} style={{ height: 36, padding: '0 14px', border: '1px solid #e4e2e4', borderRadius: 8, background: '#fff', fontSize: 13, fontWeight: 500, color: '#374151', cursor: 'pointer' }}>
-                Export CSV
+              <button id="add-shipment-btn" onClick={() => setShowModal(true)}
+                style={{ height: 36, padding: '0 16px', border: 'none', borderRadius: 8, background: '#0f172a', fontSize: 13, fontWeight: 600, color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: 18 }}>+</span> Add Shipment
               </button>
             </div>
           </header>
@@ -198,7 +311,25 @@ export default function ShipmentsPage() {
                         onClick={() => router.push(`/shipments/${s.id}`)}>
                         <td style={{ padding: '14px 20px', fontFamily: 'monospace', fontWeight: 600, color: '#0f172a', fontSize: 12 }}>{s.trackingNumber}</td>
                         <td style={{ padding: '14px 20px', color: '#1b1b1d', fontWeight: 500 }}>{s.customerName}</td>
-                        <td style={{ padding: '14px 20px', color: '#45464d', fontFamily: 'monospace', fontSize: 12 }}>{s.customerPhone}</td>
+                        <td style={{ padding: '14px 20px' }} onClick={e => e.stopPropagation()}>
+                          {editingPhone?.id === s.id ? (
+                            <input
+                              autoFocus
+                              value={editingPhone.value}
+                              onChange={e => setEditingPhone({ id: s.id, value: e.target.value })}
+                              onBlur={() => savePhone(s.id, editingPhone.value)}
+                              onKeyDown={e => { if (e.key === 'Enter') savePhone(s.id, editingPhone.value); if (e.key === 'Escape') setEditingPhone(null) }}
+                              style={{ fontFamily: 'monospace', fontSize: 12, width: 140, padding: '4px 8px', border: '1px solid #0f172a', borderRadius: 6, outline: 'none' }}
+                            />
+                          ) : (
+                            <span
+                              title="Click to edit phone"
+                              onClick={() => setEditingPhone({ id: s.id, value: s.customerPhone })}
+                              style={{ fontFamily: 'monospace', fontSize: 12, color: '#45464d', cursor: 'text', borderBottom: '1px dashed #cbd5e1', paddingBottom: 1 }}>
+                              {s.customerPhone}
+                            </span>
+                          )}
+                        </td>
                         <td style={{ padding: '14px 20px', color: '#45464d' }}>{s.failureReason.replace(/_/g, ' ')}</td>
                         <td style={{ padding: '14px 20px' }}>
                           <span style={{ display: 'inline-flex', alignItems: 'center', padding: '3px 10px', borderRadius: 999, fontSize: 11, fontWeight: 600, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>

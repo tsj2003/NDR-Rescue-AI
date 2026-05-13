@@ -116,7 +116,7 @@ export default function LoginPage() {
           <div style={{ position: 'relative', zIndex: 10 }}>
             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>Trusted by</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: '24px', opacity: 0.7 }}>
-              {['Meesho', 'Flipkart', 'Amazon'].map(b => (
+              {['Apex Logistics', 'Global Logistics', 'Swift Delivery'].map(b => (
                 <span key={b} style={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{b}</span>
               ))}
             </div>

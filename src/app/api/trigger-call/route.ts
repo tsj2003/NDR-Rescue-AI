@@ -54,8 +54,8 @@ export async function POST(req: Request) {
           agent_id: BOLNA_AGENT_ID,
           recipient_phone_number: phoneNumber,
           bypass_call_guardrails: true,
-          // Bolna V2: 'variables' injects into {placeholder} slots in agent prompt
-          variables: {
+          // Bolna: 'user_data' injects into {placeholder} slots in agent prompt
+          user_data: {
             customerName: shipment.customerName,
             trackingNumber: shipment.trackingNumber,
             dropAddress: shipment.dropAddress,
