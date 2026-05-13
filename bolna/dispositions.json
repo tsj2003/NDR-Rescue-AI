@@ -1,0 +1,44 @@
+[
+  {
+    "name": "Redelivery Slot Booked",
+    "code": "REDELIVERY_SLOT_BOOKED",
+    "description": "Customer agreed to a specific redelivery date and time window",
+    "outcome_type": "success",
+    "next_action": "schedule_redelivery"
+  },
+  {
+    "name": "Address Corrected",
+    "code": "ADDRESS_CORRECTED",
+    "description": "Customer provided a corrected delivery address",
+    "outcome_type": "success",
+    "next_action": "update_address_and_schedule"
+  },
+  {
+    "name": "Will Pickup",
+    "code": "WILL_PICKUP",
+    "description": "Customer will collect the parcel from the warehouse / hub",
+    "outcome_type": "success",
+    "next_action": "notify_hub"
+  },
+  {
+    "name": "Canceled by Customer",
+    "code": "CANCELED_BY_CUSTOMER",
+    "description": "Customer explicitly requested to cancel the order",
+    "outcome_type": "failure",
+    "next_action": "initiate_return"
+  },
+  {
+    "name": "Escalated to Human",
+    "code": "ESCALATED_TO_HUMAN",
+    "description": "Issue could not be resolved by AI — routed to human agent",
+    "outcome_type": "escalation",
+    "next_action": "create_support_ticket"
+  },
+  {
+    "name": "Unreachable",
+    "code": "UNREACHABLE",
+    "description": "Customer did not answer or the call failed repeatedly",
+    "outcome_type": "failure",
+    "next_action": "send_sms_followup"
+  }
+]

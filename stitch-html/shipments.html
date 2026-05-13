@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NDR Rescue - Shipments</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#444173",
+                      "inverse-primary": "#bec6e0",
+                      "primary-container": "#131b2e",
+                      "error-container": "#ffdad6",
+                      "secondary-fixed-dim": "#c4c1fb",
+                      "on-secondary": "#ffffff",
+                      "tertiary-fixed-dim": "#dec29a",
+                      "tertiary": "#000000",
+                      "on-primary-container": "#7c839b",
+                      "surface-container-low": "#f6f3f5",
+                      "on-tertiary-fixed": "#271901",
+                      "on-primary-fixed-variant": "#3f465c",
+                      "on-background": "#1b1b1d",
+                      "secondary-container": "#c7c3fe",
+                      "surface-container-highest": "#e4e2e4",
+                      "on-primary": "#ffffff",
+                      "secondary": "#5b598c",
+                      "primary": "#000000",
+                      "error": "#ba1a1a",
+                      "secondary-fixed": "#e3dfff",
+                      "on-surface-variant": "#45464d",
+                      "on-primary-fixed": "#131b2e",
+                      "tertiary-fixed": "#fcdeb5",
+                      "on-secondary-container": "#514f81",
+                      "primary-fixed": "#dae2fd",
+                      "on-tertiary": "#ffffff",
+                      "primary-fixed-dim": "#bec6e0",
+                      "on-secondary-fixed": "#181445",
+                      "outline-variant": "#c6c6cd",
+                      "surface-container": "#f0edef",
+                      "inverse-surface": "#303032",
+                      "surface-dim": "#dcd9db",
+                      "surface-bright": "#fcf8fa",
+                      "surface": "#fcf8fa",
+                      "on-tertiary-fixed-variant": "#574425",
+                      "on-tertiary-container": "#98805d",
+                      "inverse-on-surface": "#f3f0f2",
+                      "on-error-container": "#93000a",
+                      "on-error": "#ffffff",
+                      "outline": "#76777d",
+                      "surface-variant": "#e4e2e4",
+                      "on-surface": "#1b1b1d",
+                      "background": "#fcf8fa",
+                      "tertiary-container": "#271901",
+                      "surface-container-lowest": "#ffffff",
+                      "surface-container-high": "#eae7e9",
+                      "surface-tint": "#565e74"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {},
+              "fontFamily": {
+                      "headline": ["Inter", "sans-serif"],
+                      "display": ["Inter", "sans-serif"],
+                      "body": ["Inter", "sans-serif"],
+                      "label": ["Inter", "sans-serif"]
+              },
+              "fontSize": {}
+      },
+          },
+        }
+      </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Custom scrollbar for webkit */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e4e2e4; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c6c6cd; }
+      </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex antialiased">
+<!-- SideNavBar -->
+<nav class="bg-surface-container-lowest dark:bg-surface-dim w-[240px] h-full fixed left-0 top-0 border-r border-outline-variant dark:border-outline z-50 flex flex-col justify-between py-6 px-4">
+<div>
+<!-- Header Brand -->
+<div class="px-3 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-lg bg-primary text-on-primary flex items-center justify-center font-bold text-lg">
+                        N
+                    </div>
+<div>
+<h1 class="text-lg font-black tracking-tight text-on-surface dark:text-on-surface-variant leading-tight">NDR Rescue</h1>
+<p class="text-xs text-on-surface-variant">AI Voice Platform</p>
+</div>
+</div>
+</div>
+<!-- Tabs -->
+<ul class="space-y-1 font-body text-label-md font-medium text-primary dark:text-primary-fixed">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low dark:hover:bg-surface-container rounded-lg transition-colors duration-200 ease-in-out active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        Overview
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container dark:bg-surface-container-high text-primary dark:text-primary-fixed font-semibold rounded-lg transition-colors duration-200 ease-in-out active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">local_shipping</span>
+                        Shipments
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low dark:hover:bg-surface-container rounded-lg transition-colors duration-200 ease-in-out active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">call</span>
+                        Calls
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low dark:hover:bg-surface-container rounded-lg transition-colors duration-200 ease-in-out active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">analytics</span>
+                        Analytics
+                    </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low dark:hover:bg-surface-container rounded-lg transition-colors duration-200 ease-in-out active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</div>
+<!-- Footer Tab -->
+<div>
+<ul class="font-body text-label-md font-medium text-primary dark:text-primary-fixed">
+<li>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant dark:text-outline-variant hover:bg-surface-container-low dark:hover:bg-surface-container rounded-lg transition-colors duration-200 ease-in-out active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">account_circle</span>
+                        Profile
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="ml-[240px] flex-1 min-h-screen bg-surface flex flex-col">
+<!-- Header Bar -->
+<header class="px-8 py-6 flex justify-between items-end border-b border-outline-variant/30 bg-surface-container-lowest/50 backdrop-blur-sm sticky top-0 z-40">
+<div>
+<h1 class="text-[20px] font-semibold text-on-surface leading-tight font-headline">Shipments</h1>
+<p class="text-sm text-on-surface-variant mt-1">3 failed deliveries pending AI recovery</p>
+</div>
+<div class="flex items-center gap-3">
+<!-- Search -->
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+<input class="h-10 pl-9 pr-4 w-64 text-sm rounded-lg border border-outline-variant/50 bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-on-surface-variant/60 shadow-sm" placeholder="Search by tracking, customer..." type="text"/>
+</div>
+<!-- Filter -->
+<button class="h-10 px-3 rounded-lg border border-outline-variant/50 bg-surface-container-lowest hover:bg-surface-container-low text-on-surface-variant flex items-center gap-2 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+<span class="text-sm font-medium">Filter</span>
+</button>
+<!-- Export -->
+<button class="h-10 px-4 rounded-lg bg-surface-container-low hover:bg-surface-container border border-transparent text-on-surface font-medium text-sm transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                    Export CSV
+                </button>
+</div>
+</header>
+<div class="p-8 flex-1 flex flex-col">
+<!-- Filter Tabs Row -->
+<div class="flex items-center gap-2 mb-6">
+<button class="px-4 py-1.5 rounded-full bg-primary text-on-primary text-sm font-medium transition-colors">
+                    All (3)
+                </button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant/50 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low text-sm font-medium transition-colors">
+                    Failed Attempt (2)
+                </button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant/50 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low text-sm font-medium transition-colors">
+                    Call Scheduled (1)
+                </button>
+<button class="px-4 py-1.5 rounded-full bg-surface-container-lowest border border-outline-variant/50 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low text-sm font-medium transition-colors">
+                    Recovered (0)
+                </button>
+</div>
+<!-- Shipments Table Card -->
+<div class="bg-surface-container-lowest rounded-xl border border-outline-variant/40 shadow-[0_4px_6px_-1px_rgb(0,0,0,0.02),0_2px_4px_-2px_rgb(0,0,0,0.02)] flex-1 flex flex-col overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant/40 bg-surface-bright/50">
+<th class="px-6 py-4 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">Tracking #</th>
+<th class="px-6 py-4 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">Customer</th>
+<th class="px-6 py-4 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">Phone</th>
+<th class="px-6 py-4 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">Failure Reason</th>
+<th class="px-6 py-4 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">Status</th>
+<th class="px-6 py-4 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.05em]">Last Updated</th>
+<th class="px-6 py-4 text-[11px] font-semibold text-on-surface-variant uppercase tracking-[0.05em] text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="text-sm font-body divide-y divide-outline-variant/20">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-bright/40 transition-colors group">
+<td class="px-6 py-4 font-mono text-xs text-on-surface font-medium">TRK10001</td>
+<td class="px-6 py-4 font-medium text-on-surface">Priya Sharma</td>
+<td class="px-6 py-4 text-on-surface-variant">+91 98765 43210</td>
+<td class="px-6 py-4 text-on-surface-variant">Customer Unavailable</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-error-container/40 text-on-error-container border border-error-container">
+<span class="w-1.5 h-1.5 rounded-full bg-error mr-1.5"></span>
+                                        Failed Attempt
+                                    </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant text-xs">2h ago</td>
+<td class="px-6 py-4 text-right">
+<button class="px-3 py-1.5 rounded-lg bg-primary text-on-primary font-medium text-xs hover:bg-primary/90 transition-colors shadow-sm">
+                                        Trigger Call
+                                    </button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-bright/40 transition-colors group">
+<td class="px-6 py-4 font-mono text-xs text-on-surface font-medium">TRK10002</td>
+<td class="px-6 py-4 font-medium text-on-surface">Rahul Mehta</td>
+<td class="px-6 py-4 text-on-surface-variant">+91 87654 32109</td>
+<td class="px-6 py-4 text-on-surface-variant">Address Not Found</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-tertiary-fixed-dim/30 text-on-tertiary-fixed-variant border border-tertiary-fixed-dim/50">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container mr-1.5"></span>
+                                        Call Scheduled
+                                    </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant text-xs">45m ago</td>
+<td class="px-6 py-4 text-right">
+<button class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-medium text-xs transition-colors border border-transparent">
+                                        View Details
+                                    </button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-bright/40 transition-colors group">
+<td class="px-6 py-4 font-mono text-xs text-on-surface font-medium">TRK10003</td>
+<td class="px-6 py-4 font-medium text-on-surface">Sunita Patel</td>
+<td class="px-6 py-4 text-on-surface-variant">+91 76543 21098</td>
+<td class="px-6 py-4 text-on-surface-variant">Gate Locked</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-error-container/40 text-on-error-container border border-error-container">
+<span class="w-1.5 h-1.5 rounded-full bg-error mr-1.5"></span>
+                                        Failed Attempt
+                                    </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant text-xs">3h ago</td>
+<td class="px-6 py-4 text-right">
+<button class="px-3 py-1.5 rounded-lg bg-primary text-on-primary font-medium text-xs hover:bg-primary/90 transition-colors shadow-sm">
+                                        Trigger Call
+                                    </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="mt-auto px-6 py-4 border-t border-outline-variant/40 bg-surface-container-lowest flex items-center justify-between">
+<span class="text-sm text-on-surface-variant font-medium">Showing 1-3 of 3</span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded-md text-outline-variant cursor-not-allowed">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-md bg-surface-container text-on-surface font-medium text-sm">
+                            1
+                        </button>
+<button class="w-8 h-8 flex items-center justify-center rounded-md text-outline-variant cursor-not-allowed">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

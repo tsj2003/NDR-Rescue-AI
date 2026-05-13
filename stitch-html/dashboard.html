@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NDR Rescue - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-tint": "#565e74",
+                        "primary-fixed": "#dae2fd",
+                        "on-error-container": "#93000a",
+                        "outline-variant": "#c6c6cd",
+                        "tertiary": "#000000",
+                        "on-surface-variant": "#45464d",
+                        "tertiary-fixed": "#fcdeb5",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e4e2e4",
+                        "error-container": "#ffdad6",
+                        "tertiary-fixed-dim": "#dec29a",
+                        "secondary-fixed": "#e3dfff",
+                        "on-tertiary": "#ffffff",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "on-error": "#ffffff",
+                        "secondary": "#5b598c",
+                        "on-background": "#1b1b1d",
+                        "surface-bright": "#fcf8fa",
+                        "outline": "#76777d",
+                        "on-secondary-container": "#514f81",
+                        "on-tertiary-container": "#98805d",
+                        "surface-container": "#f0edef",
+                        "surface-container-low": "#f6f3f5",
+                        "on-primary-fixed": "#131b2e",
+                        "on-secondary-fixed-variant": "#444173",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-container": "#131b2e",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#c4c1fb",
+                        "on-primary-container": "#7c839b",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-surface": "#1b1b1d",
+                        "on-tertiary-fixed": "#271901",
+                        "on-tertiary-fixed-variant": "#574425",
+                        "inverse-surface": "#303032",
+                        "secondary-container": "#c7c3fe",
+                        "primary": "#000000",
+                        "background": "#fcf8fa",
+                        "surface-container-high": "#eae7e9",
+                        "surface-variant": "#e4e2e4",
+                        "error": "#ba1a1a",
+                        "on-secondary-fixed": "#181445",
+                        "inverse-on-surface": "#f3f0f2",
+                        "tertiary-container": "#271901",
+                        "surface-dim": "#dcd9db",
+                        "surface": "#fcf8fa",
+                        "inverse-primary": "#bec6e0"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Inter", "sans-serif"],
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex">
+<!-- SideNavBar -->
+<aside class="w-[240px] h-full fixed left-0 top-0 border-r border-outline-variant bg-surface-container-lowest border-outline-variant flat no shadows flex flex-col justify-between py-6 px-4 z-50">
+<div>
+<!-- Header -->
+<div class="flex items-center gap-3 px-2 mb-8">
+<span class="material-symbols-outlined text-primary" data-icon="inventory_2" data-weight="fill" style="font-variation-settings: 'FILL' 1;">inventory_2</span>
+<span class="text-lg font-black tracking-tight text-on-surface">NDR Rescue</span>
+</div>
+<!-- Navigation -->
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 bg-surface-container text-primary font-semibold rounded-lg active:scale-[0.98] transition-colors duration-200 ease-in-out font-body text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg active:scale-[0.98] transition-colors duration-200 ease-in-out font-body text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span>Shipments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg active:scale-[0.98] transition-colors duration-200 ease-in-out font-body text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="call">call</span>
+<span>Calls</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg active:scale-[0.98] transition-colors duration-200 ease-in-out font-body text-label-md" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg active:scale-[0.98] transition-colors duration-200 ease-in-out font-body text-label-md mt-4" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+</div>
+<!-- Footer -->
+<div class="mt-auto pt-4 border-t border-outline-variant/30">
+<a class="flex items-center justify-between px-3 py-2 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors duration-200 ease-in-out" href="#">
+<div class="flex items-center gap-3">
+<img alt="Ops Team Avatar" class="w-8 h-8 rounded-full" data-alt="A generic avatar placeholder showing the letters OT for Ops Team on a light gray background, clean minimalist flat design avatar image style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDs6-o0bbHeQlvew8D7KcDdDc8s4YKrLGXDd-evESRQtk88hNPfah4tA6_6f9t6bUye68KG6hEJDLQ8Qjjt8vep6PY54x7bG0ijvwPjSFGldmZfLdpOJCkNFMTsupjl8lXDD6euaheoFBGfQiIYz85j5kr_gLWbhZGKdZblKrAJXktSrCfPZ2ZIKwZB5HNFJYqFmngj6ux_0r6jcCbqwPsQIKxODL1KcHK2eE4z9ERkY_70D3krFwHFZ0ZtXVyVdFYOTiVuG20VSwM"/>
+<span class="font-medium text-sm">Ops Team</span>
+</div>
+<span class="material-symbols-outlined text-[20px]" data-icon="account_circle">account_circle</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-[240px] flex-1 flex flex-col min-h-screen">
+<!-- TopAppBar -->
+<header class="sticky top-0 z-40 w-full bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant flex justify-between items-center h-16 px-8 transition-all duration-200">
+<h1 class="font-headline text-headline-sm font-semibold text-primary">Overview</h1>
+<div class="flex items-center gap-6">
+<span class="text-sm text-on-surface-variant font-medium">Today: May 13, 2025</span>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-[12px] font-medium text-[14px] hover:bg-inverse-surface transition-colors shadow-sm active:scale-95">
+                    Trigger Batch Call
+                </button>
+</div>
+</header>
+<!-- Dashboard Canvas -->
+<div class="p-8 max-w-[1280px] mx-auto w-full space-y-8">
+<!-- KPIs -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 hover:shadow-sm transition-shadow duration-200">
+<h3 class="text-sm font-medium text-on-surface-variant mb-2">Total NDRs Today</h3>
+<div class="flex items-baseline gap-3">
+<span class="text-3xl font-bold text-on-surface">3</span>
+<span class="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="arrow_upward">arrow_upward</span>
+                            vs yesterday
+                        </span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 hover:shadow-sm transition-shadow duration-200">
+<h3 class="text-sm font-medium text-on-surface-variant mb-2">Recovered</h3>
+<div class="flex items-baseline gap-3">
+<span class="text-3xl font-bold text-on-surface flex items-center gap-2">
+                            1
+                            <span class="material-symbols-outlined text-emerald-500 text-[24px]" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</span>
+<span class="text-sm text-on-surface-variant">33.3% rate</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 hover:shadow-sm transition-shadow duration-200">
+<h3 class="text-sm font-medium text-on-surface-variant mb-2">Calls In Progress</h3>
+<div class="flex items-baseline gap-3">
+<span class="text-3xl font-bold text-amber-500">0</span>
+<span class="text-sm text-on-surface-variant">0 active right now</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 hover:shadow-sm transition-shadow duration-200">
+<h3 class="text-sm font-medium text-on-surface-variant mb-2">Avg Resolution Time</h3>
+<div class="flex flex-col">
+<span class="text-3xl font-bold text-on-surface">4m 32s</span>
+<span class="text-xs text-on-surface-variant mt-1">Industry avg: 48hrs</span>
+</div>
+</div>
+</div>
+<!-- Chart Section -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl p-6 hover:shadow-sm transition-shadow duration-200">
+<div class="flex justify-between items-center mb-6">
+<h2 class="text-lg font-semibold text-on-surface">Recovery Rate — Last 7 Days</h2>
+<span class="text-xs font-medium text-primary bg-primary-fixed px-3 py-1 rounded-full flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="smart_toy">smart_toy</span>
+                        Powered by AI
+                    </span>
+</div>
+<!-- Mock Chart Area -->
+<div class="h-64 w-full relative flex items-end justify-between px-2 pb-6 border-b border-l border-surface-variant mt-4">
+<!-- Y Axis Labels -->
+<div class="absolute -left-8 bottom-0 h-full flex flex-col justify-between text-xs text-on-surface-variant pb-6">
+<span>100%</span>
+<span>50%</span>
+<span>0%</span>
+</div>
+<!-- Graph visual representation (CSS pure) -->
+<div class="absolute bottom-6 left-0 w-full h-[calc(100%-24px)] overflow-hidden">
+<svg class="w-full h-full" preserveaspectratio="none" viewbox="0 0 100 100">
+<path class="vector-effect-non-scaling-stroke" d="M0,80 Q10,70 20,40 T40,60 T60,20 T80,40 T100,10" fill="none" stroke="#2563eb" stroke-width="2"></path>
+<path d="M0,80 Q10,70 20,40 T40,60 T60,20 T80,40 T100,10 L100,100 L0,100 Z" fill="rgba(37, 99, 235, 0.1)"></path>
+</svg>
+</div>
+<!-- X Axis Labels -->
+<div class="absolute -bottom-6 left-0 w-full flex justify-between text-xs text-on-surface-variant pt-2 px-2">
+<span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+</div>
+</div>
+</div>
+<!-- Table Section -->
+<div class="bg-surface-container-lowest border border-surface-variant rounded-xl overflow-hidden hover:shadow-sm transition-shadow duration-200">
+<div class="p-6 border-b border-surface-variant flex justify-between items-center">
+<h2 class="text-lg font-semibold text-on-surface">Recent Shipments</h2>
+<a class="text-sm font-medium text-primary hover:text-surface-tint flex items-center gap-1 transition-colors" href="#">
+                        View all <span class="material-symbols-outlined text-[16px]" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+<div class="w-full overflow-x-auto">
+<table class="w-full text-left text-sm">
+<thead class="text-xs text-on-surface-variant bg-surface-container-lowest">
+<tr>
+<th class="px-6 py-4 font-medium border-b border-surface-variant">Tracking #</th>
+<th class="px-6 py-4 font-medium border-b border-surface-variant">Customer</th>
+<th class="px-6 py-4 font-medium border-b border-surface-variant">Status</th>
+<th class="px-6 py-4 font-medium border-b border-surface-variant">Last Action</th>
+<th class="px-6 py-4 font-medium border-b border-surface-variant">Time</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-variant">
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4 font-medium text-on-surface">#TRK-8921X</td>
+<td class="px-6 py-4 text-on-surface-variant">Sarah Jenkins</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100">
+                                        Failed
+                                    </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">AI Voicemail Left</td>
+<td class="px-6 py-4 text-on-surface-variant">10 mins ago</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4 font-medium text-on-surface">#TRK-7742Y</td>
+<td class="px-6 py-4 text-on-surface-variant">Michael Chen</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                                        Scheduled
+                                    </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">Call Pending</td>
+<td class="px-6 py-4 text-on-surface-variant">45 mins ago</td>
+</tr>
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="px-6 py-4 font-medium text-on-surface">#TRK-3319Z</td>
+<td class="px-6 py-4 text-on-surface-variant">Emma Davis</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">
+                                        Recovered
+                                    </span>
+</td>
+<td class="px-6 py-4 text-on-surface-variant">Address Updated</td>
+<td class="px-6 py-4 text-on-surface-variant">2 hrs ago</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,77 @@
+{
+  "agent_config": {
+    "agent_name": "NDR Rescue Agent",
+    "agent_type": "other",
+    "agent_welcome_message": "Hello, am I speaking with {{customerName}}? I'm calling from Global Logistics about your package {{trackingNumber}} that couldn't be delivered. I'm here to help schedule a redelivery — this will just take a minute!",
+    "webhook_url": "{{APP_URL}}/api/webhook/bolna?secret={{WEBHOOK_SECRET}}",
+    "tasks": [
+      {
+        "task_type": "conversation",
+        "toolchain": {
+          "execution": "parallel",
+          "pipelines": [["transcriber", "llm", "synthesizer"]]
+        },
+        "tools_config": {
+          "llm_agent": {
+            "agent_type": "simple_llm_agent",
+            "agent_flow_type": "streaming",
+            "llm_config": {
+              "agent_flow_type": "streaming",
+              "provider": "openai",
+              "family": "openai",
+              "model": "gpt-4.1-mini",
+              "max_tokens": 150,
+              "temperature": 0.2
+            }
+          },
+          "synthesizer": {
+            "provider": "elevenlabs",
+            "provider_config": {
+              "voice": "Nila",
+              "voice_id": "V9LCAAi4tTlqe9JadbCo",
+              "model": "eleven_turbo_v2_5"
+            },
+            "stream": true,
+            "buffer_size": 250,
+            "audio_format": "wav"
+          },
+          "transcriber": {
+            "provider": "deepgram",
+            "model": "nova-2",
+            "language": "en",
+            "stream": true,
+            "sampling_rate": 16000,
+            "encoding": "linear16",
+            "endpointing": 400
+          },
+          "input": {
+            "provider": "twilio",
+            "format": "wav"
+          },
+          "output": {
+            "provider": "twilio",
+            "format": "wav"
+          }
+        },
+        "task_config": {
+          "hangup_after_silence": 8,
+          "incremental_delay": 400,
+          "number_of_words_for_interruption": 2,
+          "hangup_after_LLMCall": false,
+          "backchanneling": false,
+          "call_terminate": 180,
+          "voicemail": false
+        }
+      }
+    ],
+    "calling_guardrails": {
+      "call_start_hour": 8,
+      "call_end_hour": 20
+    }
+  },
+  "agent_prompts": {
+    "task_1": {
+      "system_prompt": "You are Priya, a friendly delivery recovery specialist for Global Logistics. The customer's name is {{customerName}}, package tracking number is {{trackingNumber}}, delivery address is {{dropAddress}}, and delivery failed because: {{failureReason}}.\n\nYour goal: Resolve the failed delivery in under 3 minutes.\n\n1. Confirm you are speaking with {{customerName}}.\n2. Briefly explain the failed delivery.\n3. Ask for a preferred redelivery date and time slot (morning, afternoon, or evening).\n4. If address was wrong, ask for the correct address.\n5. If customer wants to pick up from warehouse, note that.\n6. If customer wants to cancel, confirm it.\n7. Summarize the agreed resolution and say goodbye.\n\nRules: Be empathetic and concise (max 2 sentences per turn). Only discuss this delivery. If unresolvable after 3 attempts, offer to escalate to a human agent."
+    }
+  }
+}

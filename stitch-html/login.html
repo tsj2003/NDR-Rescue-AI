@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>NDR Rescue - Login</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#131b2e",
+                        "outline": "#76777d",
+                        "surface-container-high": "#eae7e9",
+                        "inverse-primary": "#bec6e0",
+                        "surface-variant": "#e4e2e4",
+                        "surface-container-highest": "#e4e2e4",
+                        "primary": "#000000",
+                        "primary-fixed-dim": "#bec6e0",
+                        "on-secondary": "#ffffff",
+                        "primary-container": "#131b2e",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed-variant": "#574425",
+                        "on-background": "#1b1b1d",
+                        "on-surface-variant": "#45464d",
+                        "surface": "#fcf8fa",
+                        "surface-dim": "#dcd9db",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#303032",
+                        "on-tertiary-container": "#98805d",
+                        "background": "#fcf8fa",
+                        "on-tertiary-fixed": "#271901",
+                        "tertiary-container": "#271901",
+                        "outline-variant": "#c6c6cd",
+                        "on-primary-fixed-variant": "#3f465c",
+                        "tertiary-fixed-dim": "#dec29a",
+                        "on-error": "#ffffff",
+                        "surface-container-low": "#f6f3f5",
+                        "secondary-fixed-dim": "#c4c1fb",
+                        "tertiary": "#000000",
+                        "on-primary": "#ffffff",
+                        "tertiary-fixed": "#fcdeb5",
+                        "secondary-container": "#c7c3fe",
+                        "secondary-fixed": "#e3dfff",
+                        "on-primary-container": "#7c839b",
+                        "surface-tint": "#565e74",
+                        "primary-fixed": "#dae2fd",
+                        "on-secondary-fixed-variant": "#444173",
+                        "on-secondary-fixed": "#181445",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#514f81",
+                        "surface-bright": "#fcf8fa",
+                        "secondary": "#5b598c",
+                        "surface-container": "#f0edef",
+                        "on-error-container": "#93000a",
+                        "on-surface": "#1b1b1d",
+                        "inverse-on-surface": "#f3f0f2",
+                        "error-container": "#ffdad6",
+                        "primary-navy": "#0f172a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {},
+                    "fontFamily": {
+                        "headline": ["Inter", "sans-serif"],
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    },
+                    "fontSize": {}
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom styles for specific requirements */
+        .gradient-panel {
+            background: linear-gradient(to bottom right, #0f172a, #1e1b4b);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image: 
+                linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+
+        .floating-input {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .floating-input input {
+            width: 100%;
+            height: 48px;
+            padding: 1rem 1rem 0;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            background-color: transparent;
+            font-family: 'Inter', sans-serif;
+            color: #1b1b1d;
+            transition: all 0.2s ease;
+        }
+
+        .floating-input input:focus {
+            outline: none;
+            border-color: #0f172a;
+            box-shadow: 0 0 0 4px rgba(15, 23, 42, 0.1);
+        }
+
+        .floating-input label {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #76777d;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            pointer-events: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .floating-input input:focus + label,
+        .floating-input input:not(:placeholder-shown) + label {
+            top: 0.25rem;
+            font-size: 0.75rem;
+            transform: translateY(0);
+        }
+
+        .shimmer-btn {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .shimmer-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, transparent, rgba(255,255,255,0.1), transparent);
+            transform: skewX(-20deg);
+        }
+        
+        .shimmer-btn:hover::after {
+            left: 150%;
+            transition: left 0.7s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-[#f8fafc] font-body text-on-surface h-screen flex flex-col md:flex-row antialiased">
+<!-- Left Panel (Gradient & Value Prop) - Hidden on Mobile -->
+<div class="hidden md:flex w-1/2 gradient-panel flex-col justify-between p-12 lg:p-24 relative">
+<div class="grid-overlay"></div>
+<div class="relative z-10 flex-grow flex flex-col justify-center">
+<h1 class="text-4xl lg:text-5xl font-bold text-on-primary font-headline leading-tight mb-8 tracking-tight">
+                Recover failed deliveries.<br/>Automatically.
+            </h1>
+<div class="flex flex-wrap gap-4 mb-12">
+<div class="flex items-center px-4 py-2 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm">
+<span class="text-on-primary text-sm font-medium">63% recovery rate</span>
+</div>
+<div class="flex items-center px-4 py-2 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm">
+<span class="text-on-primary text-sm font-medium">&lt;5 min response</span>
+</div>
+<div class="flex items-center px-4 py-2 rounded-full border border-white/20 bg-white/5 backdrop-blur-sm">
+<span class="text-on-primary text-sm font-medium">₹4 per call</span>
+</div>
+</div>
+</div>
+<div class="relative z-10">
+<p class="text-outline-variant text-sm mb-4 font-medium uppercase tracking-wider">Trusted by</p>
+<div class="flex items-center gap-8 opacity-60 grayscale brightness-200">
+<!-- Logos would be images, using text/icons as placeholders -->
+<span class="text-white font-bold text-xl">Meesho</span>
+<span class="text-white font-bold text-xl">Flipkart</span>
+<span class="text-white font-bold text-xl">Amazon</span>
+</div>
+</div>
+</div>
+<!-- Right Panel (Login Form) -->
+<div class="w-full md:w-1/2 flex items-center justify-center p-6 sm:p-12 h-full">
+<div class="w-full max-w-[400px]">
+<!-- Logo area -->
+<div class="flex items-center gap-2 mb-10">
+<span class="material-symbols-outlined text-primary-navy" style="font-variation-settings: 'FILL' 1;">package_2</span>
+<span class="text-xl font-bold tracking-tight text-primary-navy font-headline">NDR Rescue</span>
+</div>
+<!-- Form Header -->
+<div class="mb-8">
+<h2 class="text-[24px] font-bold text-on-surface mb-2 font-headline tracking-tight">Sign in to your workspace</h2>
+<p class="text-outline text-sm">Continue where you left off</p>
+</div>
+<!-- The Form -->
+<form action="#" class="bg-surface-container-lowest p-8 rounded-2xl border border-surface-variant shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05),0_2px_4px_-2px_rgba(0,0,0,0.05)]" method="POST">
+<div class="floating-input">
+<input id="email" name="email" placeholder=" " required="" type="email" value="demo@ndrrescue.com"/>
+<label for="email">Email address</label>
+</div>
+<div class="floating-input relative mb-8">
+<input id="password" name="password" placeholder=" " required="" type="password" value="password123"/>
+<label for="password">Password</label>
+<button class="absolute right-3 top-1/2 transform -translate-y-1/2 text-outline hover:text-on-surface transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">visibility_off</span>
+</button>
+</div>
+<button class="w-full bg-primary-navy text-on-primary h-12 rounded-xl font-medium text-sm flex items-center justify-center shimmer-btn transition-colors hover:bg-black" type="submit">
+                    Sign in
+                </button>
+<div class="mt-6 text-center">
+<p class="text-[11px] text-outline">Demo credentials pre-filled</p>
+</div>
+</form>
+</div>
+</div>
+</body></html>

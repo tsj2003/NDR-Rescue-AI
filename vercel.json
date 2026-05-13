@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "buildCommand": "npx prisma generate && next build",
+  "env": {
+    "DATABASE_URL": "@database_url",
+    "BOLNA_API_KEY": "@bolna_api_key",
+    "BOLNA_AGENT_ID": "@bolna_agent_id",
+    "WEBHOOK_SECRET": "@webhook_secret",
+    "JWT_SECRET": "@jwt_secret"
+  }
+}

@@ -1,0 +1,102 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+enum ShipmentState {
+  PENDING
+  FAILED_ATTEMPT
+  CALL_SCHEDULED
+  CALL_IN_PROGRESS
+  REDELIVERY_CONFIRMED
+  MANUAL_REVIEW
+  CANCELED
+}
+
+enum CallState {
+  QUEUED
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+  NO_ANSWER
+}
+
+enum FailureReason {
+  CUSTOMER_NOT_AVAILABLE
+  ADDRESS_NOT_FOUND
+  WRONG_ADDRESS
+  GATE_LOCKED
+  REFUSED_DELIVERY
+  OTHER
+}
+
+enum FinalOutcome {
+  REDELIVERY_SLOT_BOOKED
+  ADDRESS_CORRECTED
+  WILL_PICKUP
+  CANCELED_BY_CUSTOMER
+  ESCALATED_TO_HUMAN
+  UNREACHABLE
+}
+
+model Organization {
+  id        String     @id @default(cuid())
+  name      String
+  operators Operator[]
+  shipments Shipment[]
+}
+
+model Operator {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  name           String
+  passwordHash   String
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+}
+
+model Shipment {
+  id              String        @id @default(cuid())
+  trackingNumber  String        @unique
+  customerName    String
+  customerPhone   String
+  dropAddress     String
+  state           ShipmentState @default(FAILED_ATTEMPT)
+  failureReason   FailureReason
+  organizationId  String
+  organization    Organization  @relation(fields: [organizationId], references: [id])
+  callExecutions  CallExecution[]
+  auditEvents     AuditEvent[]
+  consentObtained Boolean       @default(false)
+  consentTime     DateTime?
+  expectedSlot    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+}
+
+model CallExecution {
+  id           String        @id @unique // Bolna Call ID
+  shipmentId   String
+  shipment     Shipment      @relation(fields: [shipmentId], references: [id])
+  state        CallState     @default(QUEUED)
+  transcript   String?
+  recordingUrl String?
+  extractedData Json?
+  finalOutcome FinalOutcome?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  webhookCount Int           @default(0)
+}
+
+model AuditEvent {
+  id         String   @id @default(cuid())
+  shipmentId String
+  shipment   Shipment @relation(fields: [shipmentId], references: [id])
+  event      String
+  details    Json?
+  createdAt  DateTime @default(now())
+}
