@@ -1,188 +1,118 @@
-# NDR Rescue — AI Voice Agent for Delivery Recovery
+# 🚀 NDR Rescue AI — Bolna Full Stack Engineering Assignment
 
-> **Bolna AI FSE Assignment Submission** | Tarandeep Singh Juneja
+**Built by:** Tarandeep Singh Juneja  
+**Video Demo:** [Link to Google Drive/YouTube Demo here]  
+**Live App:** [Insert Vercel Link here if applicable]  
 
-A production-ready web platform that deploys an AI voice agent to automatically recover failed deliveries (NDR) by calling customers, capturing redelivery slots, and updating logistics ops in real-time.
+Hey Bolna Team! 👋 This is my submission for the Full Stack Engineer assignment. Instead of building a generic AI caller, I decided to tackle a massive, expensive problem plaguing the Indian D2C e-commerce ecosystem: **Non-Delivery Reports (NDRs)**. 
+
+Here is how I solved all 5 assignment objectives.
 
 ---
 
-## 🎯 The Problem
+## 🎯 Objective 1: Identify a Real Enterprise Use Case
 
-Indian e-commerce loses ₹4,500+ crore annually to failed deliveries (NDRs). The current fix: a human agent calls the customer manually — slow, expensive (₹45/call), and inconsistent. **NDR Rescue** replaces that call with an AI voice agent that costs ₹4/call and resolves in under 5 minutes.
+**The Problem:** 
+Indian e-commerce loses ₹4,500+ crore annually to failed deliveries. When a delivery fails (customer unavailable, wrong address), logistics partners mark it as an NDR. Operations teams currently have to manually call customers to fix the issue, costing ₹45+ per call. This is unscalable, slow, and leads to massive Return to Origin (RTO) losses.
 
-## 🏗 Architecture
+**The Workflow:** 
+1. Delivery fails → System detects NDR.
+2. AI Agent immediately calls the customer (within 5 minutes).
+3. AI explains the failure, extracts a new delivery slot/address.
+4. Logistics ops dashboard updates in real-time.
 
-```
+**The Outcome Metric:**
+- **Cost Reduction:** From ₹45/manual call to ~₹4/AI call.
+- **RTO Reduction:** Expected 30-40% drop in RTOs due to instant resolution before the package is returned to the warehouse.
+
+---
+
+## 🤖 Objective 2: Voice AI Agent on Bolna
+
+I used the **Bolna V2 API** to build the agent. 
+
+**What makes this implementation special?**
+- **Dynamic Prompt Variables:** Instead of a generic IVR, the agent's memory is injected live via the `user_data` payload. It knows the exact `{customerName}`, `{trackingNumber}`, `{dropAddress}`, and `{failureReason}` before it even says hello.
+- **Real-Time Context Switching:** As seen in my demo recording, the agent seamlessly handles interruptions, name corrections, and even switches to Hindi mid-conversation while retaining the address details.
+- **Automated Infrastructure:** I wrote a custom Node script (`scripts/setup-bolna-agent.ts`) that programmatically configures the agent, the Deepgram STT, ElevenLabs TTS, and the webhook URL directly via Bolna's REST API. 
+
+---
+
+## 💻 Objective 3 & 4: The Web App & Full Flow Demonstration
+
+I built a production-ready **Next.js 16 App Router** platform backed by **PostgreSQL (Prisma)**. 
+
+### 🌊 The Full Flow:
+1. **User (Ops Team):** Logs into the beautiful glassmorphism dashboard.
+2. **Web App:** Displays pending failed deliveries (NDRs). The user clicks "Trigger Call".
+3. **Agent:** Our Next.js backend pings the Bolna V2 API, which initiates the live call.
+4. **Backend Logic (The Brain):** 
+   - A robust Webhook Handler (`/api/webhook/bolna`) listens for Bolna events.
+   - It parses the AI's extracted JSON data.
+   - **Fallback Engine:** If the LLM extraction fails, I built a regex-based fallback that parses the raw call transcript to extract delivery slot times.
+5. **Output:** The DB state machine strictly transitions the shipment from `FAILED_ATTEMPT` → `CALL_SCHEDULED` → `REDELIVERY_CONFIRMED` and reflects this live on the UI.
+
+---
+
+## 📸 Architecture Visualized
+
+![NDR Rescue Architecture](architecture.png)
+
+```text
 Customer → [Failed Delivery] → NDR Rescue Web App
                                      ↓
-                           POST /api/trigger-call
+                           POST /api/trigger-call (Injects Variables)
                                      ↓
-                        Bolna AI V2 API (agent: de639b14)
-                        ElevenLabs voice "Nila" (Indian EN)
-                        GPT-4o-mini extraction
+                        Bolna AI V2 Agent (Deepgram + OpenAI + ElevenLabs)
                                      ↓
                     [Bolna calls customer via Twilio/PSTN]
                                      ↓
-                    POST /api/webhook/bolna (ngrok tunnel)
+                 POST /api/webhook/bolna (Next.js Webhook Endpoint)
                                      ↓
-                     State machine: FAILED → CALL_SCHEDULED
-                                         → REDELIVERY_CONFIRMED
+             State Machine Validation + Transcript Extraction Fallback
                                      ↓
-                          Ops dashboard updates live
+                      Ops Dashboard Updates in Real-Time
 ```
 
-## 🚀 Quick Start (5 minutes)
+---
 
-### Prerequisites
-- Node.js 18+
-- Docker (for Postgres)
-- Bolna API key from [app.bolna.ai](https://app.bolna.ai)
+## 🚀 Quick Start (Run it Locally)
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/tarandeep-juneja/ndr-rescue
-cd ndr-rescue
+git clone https://github.com/tsj2003/NDR-Rescue-AI.git
+cd NDR-Rescue-AI
 npm install
 ```
 
 ### 2. Configure Environment
-```bash
-cp .env.example .env
-# Edit .env with your values:
+Create a `.env` file:
+```env
+DATABASE_URL="postgresql://myuser:mypassword@localhost:5434/ndr_rescue"
+BOLNA_API_KEY="your-bolna-api-key"
+APP_URL="https://your-ngrok-url.ngrok-free.dev" # Or Vercel URL
+JWT_SECRET="supersecret"
+WEBHOOK_SECRET="my-super-secret-webhook-key"
 ```
 
-| Variable | Value |
-|----------|-------|
-| `DATABASE_URL` | `postgresql://myuser:mypassword@localhost:5434/ndr_rescue` |
-| `BOLNA_API_KEY` | Your key from app.bolna.ai |
-| `BOLNA_AGENT_ID` | Auto-set by setup script |
-| `APP_URL` | `https://your-ngrok-url.ngrok.io` (or Vercel URL) |
-| `JWT_SECRET` | Any random 32-char string |
-| `WEBHOOK_SECRET` | Any random string |
-
-### 3. Start Postgres
+### 3. Start Database & Seed Data
 ```bash
 docker-compose up -d
-```
-
-### 4. Run Migrations & Seed
-```bash
 npx prisma migrate deploy
 npm run seed
-# Creates: 1 org, 1 operator (demo@logistics.com / demo1234), 3 failed shipments
 ```
 
-### 5. Deploy Bolna Agent
+### 4. Deploy the Bolna Agent
 ```bash
 npm run setup-bolna
-# Creates the voice agent, prints BOLNA_AGENT_ID → paste into .env
+# This automatically creates the agent on Bolna and saves the BOLNA_AGENT_ID to your .env
 ```
 
-### 6. Expose Webhook (for real calls)
-```bash
-ngrok http 3000
-# Copy HTTPS URL → set APP_URL in .env → re-run: npm run setup-bolna
-```
-
-### 7. Start App
+### 5. Start the App
 ```bash
 npm run dev
-# → http://localhost:3000
 ```
-
-**Login:** `demo@logistics.com` / `demo1234`
+**Login credentials:** `demo@logistics.com` / `demo1234`
 
 ---
-
-## 📱 Pages
-
-| Route | Description |
-|-------|-------------|
-| `/login` | Split-panel auth with demo credentials pre-filled |
-| `/dashboard` | KPI cards, 7-day recovery trend chart, recent shipments |
-| `/shipments` | Full queue with filter tabs, search, Trigger Call button |
-| `/shipments/[id]` | Detail: call timeline, AI transcript, extracted data |
-
-## 🔌 API Endpoints
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/auth/login` | Cookie-based auth |
-| `GET` | `/api/shipments` | List all shipments |
-| `GET` | `/api/shipments/[id]` | Shipment + call history |
-| `POST` | `/api/trigger-call` | Queue Bolna voice call |
-| `POST` | `/api/webhook/bolna` | Receive call completion |
-| `GET` | `/api/dashboard` | KPI + weekly trend data |
-| `POST` | `/api/dev/simulate-bolna-webhook` | Dev-only: simulate completion |
-
-## 🧪 Testing
-
-```bash
-# Unit tests (42 tests)
-npm test
-
-# E2E tests (6 Playwright specs)
-npx playwright install
-npm run test:e2e
-```
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 16 (App Router, Turbopack) |
-| Database | PostgreSQL via Prisma 7 + adapter-pg |
-| Voice AI | Bolna V2 API + ElevenLabs (Nila voice) |
-| LLM | GPT-4o-mini (slot extraction) |
-| UI | Inter + Material Symbols, Recharts |
-| Design | Stitch MCP (Wispr Flow aesthetic) |
-| Auth | JWT + HTTP-only cookies |
-| Testing | Vitest + Playwright |
-
-## 📊 Business Metrics (Demo Data)
-
-- **Recovery Rate**: 33%+ from first run
-- **Cost per call**: ₹4 (vs ₹45 human agent)
-- **Time to resolution**: <5 min (vs 24-48hrs manual)
-- **ROI**: 11x cost reduction per recovered shipment
-
-## 🔐 Webhook Security
-
-All Bolna callbacks verified via HMAC `?secret=` parameter. Idempotency guard prevents duplicate state updates if Bolna sends the same webhook twice.
-
-## 📁 Project Structure
-
-```
-bolna/
-├── prisma/
-│   ├── schema.prisma          # 5 models: Org, Operator, Shipment, CallExecution, AuditEvent
-│   └── seed/seed.ts           # Demo data seeder (resets to clean state)
-├── bolna/
-│   └── agent-config.json      # Bolna V2 agent schema
-├── scripts/
-│   └── setup-bolna-agent.ts   # Automated agent deployment
-├── src/
-│   ├── app/
-│   │   ├── api/               # All API routes
-│   │   ├── login/             # Auth page
-│   │   ├── dashboard/         # KPI overview
-│   │   └── shipments/         # Queue + detail
-│   └── lib/
-│       ├── prisma.ts          # Prisma client singleton
-│       └── auth.ts            # JWT helpers
-└── stitch-html/               # Stitch MCP design exports
-```
-
----
-
-## 📝 Assignment Notes
-
-This project solves the **NDR (Non-Delivery Report) recovery problem** in Indian e-commerce logistics — one of Bolna AI's own flagship use cases. The platform demonstrates:
-
-1. **Real voice AI integration** — actual Bolna V2 API calls with live Twilio routing
-2. **Production-grade backend** — idempotent webhooks, Prisma migrations, JWT auth
-3. **Enterprise UI** — Stitch MCP-generated design system matching Wispr Flow aesthetics
-4. **Full observability** — every call state transition is audited and displayed
-
-**Author**: Tarandeep Singh Juneja  
-**Submission**: [Google Form](https://forms.gle/g2YpvmjZm4ufb87XA)
+*Built with ❤️ for the Bolna engineering team.*
