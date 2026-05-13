@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NDR Rescue — Bolna FSE Assignment</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: #0f172a; color: #fff; overflow: hidden; }
+  .slides { width: 100vw; height: 100vh; position: relative; }
+  .slide { position: absolute; inset: 0; display: none; flex-direction: column; padding: 60px 80px; }
+  .slide.active { display: flex; }
+  .tag { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #64748b; margin-bottom: 16px; }
+  h1 { font-size: 56px; font-weight: 900; line-height: 1.1; letter-spacing: -0.03em; }
+  h2 { font-size: 38px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 32px; }
+  h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  p { font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.7); }
+  .accent { color: #60a5fa; }
+  .green { color: #34d399; }
+  .grid { display: grid; gap: 20px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 24px; }
+  .card-dark { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 24px; }
+  .stat { font-size: 42px; font-weight: 900; letter-spacing: -0.03em; }
+  .stat-label { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+  .chip { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .chip-blue { background: rgba(96,165,250,0.15); color: #60a5fa; border: 1px solid rgba(96,165,250,0.3); }
+  .chip-green { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+  .chip-red { background: rgba(248,113,113,0.15); color: #f87171; border: 1px solid rgba(248,113,113,0.3); }
+  .flow { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .flow-step { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 12px 20px; font-size: 14px; font-weight: 500; }
+  .flow-arrow { color: #475569; font-size: 20px; }
+  .nav { position: fixed; bottom: 32px; right: 40px; display: flex; gap: 8px; z-index: 100; }
+  .nav button { width: 40px; height: 40px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+  .nav button:hover { background: rgba(255,255,255,0.15); }
+  .slide-num { position: fixed; bottom: 40px; left: 40px; font-size: 12px; color: #475569; font-weight: 500; }
+  .logo { font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 40px; }
+  .divider { width: 48px; height: 3px; background: #2563eb; border-radius: 2px; margin: 16px 0 32px; }
+  .code { font-family: 'SF Mono', 'Fira Code', monospace; background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 16px 20px; font-size: 13px; color: #94a3b8; margin-top: 12px; }
+  .highlight { color: #60a5fa; }
+  ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  ul li::before { content: '→'; color: #2563eb; margin-right: 10px; font-weight: 700; }
+  ul li { font-size: 15px; color: rgba(255,255,255,0.8); }
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: rgba(37,99,235,0.15); border: 1px solid rgba(37,99,235,0.4); border-radius: 999px; font-size: 12px; font-weight: 600; color: #60a5fa; }
+
+  /* Slide-specific backgrounds */
+  #s1 { background: linear-gradient(135deg, #0f172a 60%, #1e1b4b); }
+  #s2 { background: #0f172a; }
+  #s3 { background: linear-gradient(135deg, #0f172a, #0c1a0c); }
+  #s4 { background: #0f172a; }
+  #s5 { background: #0f172a; }
+  #s6 { background: linear-gradient(135deg, #0f172a, #0c1535); }
+  #s7 { background: #0f172a; }
+</style>
+</head>
+<body>
+
+<div class="slides">
+
+  <!-- SLIDE 1: Title -->
+  <div class="slide active" id="s1">
+    <div class="logo">BOLNA AI — FSE ASSIGNMENT</div>
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center;">
+      <div class="tag">Enterprise Logistics × Voice AI</div>
+      <h1>NDR Rescue</h1>
+      <h1 style="color:#60a5fa;">AI Voice Agent</h1>
+      <div class="divider"></div>
+      <p style="font-size:20px; max-width:600px;">Recover failed deliveries automatically using Bolna's voice AI. Cut resolution time from 48hrs to 5 minutes at ₹4/call.</p>
+      <div style="display:flex; gap:12px; margin-top:32px; flex-wrap:wrap;">
+        <span class="chip chip-blue">Bolna V2 API</span>
+        <span class="chip chip-green">ElevenLabs Nila Voice</span>
+        <span class="chip chip-blue">GPT-4o-mini Extraction</span>
+        <span class="chip chip-green">Next.js 16 + Prisma 7</span>
+      </div>
+      <p style="margin-top:40px; font-size:14px; color:#475569;">Tarandeep Singh Juneja &nbsp;·&nbsp; VIT Bhopal CSE &nbsp;·&nbsp; github.com/tarandeep-juneja/ndr-rescue</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: The Problem -->
+  <div class="slide" id="s2">
+    <div class="logo">THE PROBLEM</div>
+    <h2>Indian logistics loses <span class="accent">₹4,500 Cr/year</span> to NDRs</h2>
+    <div class="grid grid-2" style="flex:1;">
+      <div>
+        <div class="grid" style="gap:16px;">
+          <div class="card">
+            <div class="stat" style="color:#f87171;">8–15%</div>
+            <div class="stat-label">Of all deliveries fail on first attempt</div>
+          </div>
+          <div class="card">
+            <div class="stat" style="color:#f87171;">48 hrs</div>
+            <div class="stat-label">Average manual resolution time</div>
+          </div>
+          <div class="card">
+            <div class="stat" style="color:#f87171;">₹45</div>
+            <div class="stat-label">Cost per human agent call</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-dark" style="display:flex; flex-direction:column; gap:16px; justify-content:center;">
+        <h3>Current workflow (broken)</h3>
+        <div class="flow" style="flex-direction:column; align-items:flex-start;">
+          <div class="flow-step" style="width:100%;">📦 Package fails delivery</div>
+          <div class="flow-arrow" style="margin-left:20px;">↓ 2–4 hrs delay</div>
+          <div class="flow-step" style="width:100%;">👤 Ops team manually reviews NDR</div>
+          <div class="flow-arrow" style="margin-left:20px;">↓ Queue of 100s of calls</div>
+          <div class="flow-step" style="width:100%;">📞 Human agent calls customer</div>
+          <div class="flow-arrow" style="margin-left:20px;">↓ 24–48 hrs total</div>
+          <div class="flow-step" style="width:100%; border-color:#f87171; color:#f87171;">❌ 40–60% still unresolved</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: The Solution -->
+  <div class="slide" id="s3">
+    <div class="logo">THE SOLUTION</div>
+    <h2>NDR Rescue: <span class="green">Replace the human call</span></h2>
+    <div class="flow" style="margin-bottom:36px; justify-content:center;">
+      <div class="flow-step">📦 NDR Detected</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:#2563eb; color:#60a5fa;">🤖 AI triggers call</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">☎️ Bolna calls customer</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step">📝 Slot extracted</div>
+      <div class="flow-arrow">→</div>
+      <div class="flow-step" style="border-color:#34d399; color:#34d399;">✅ DB updated</div>
+    </div>
+    <div class="grid grid-3">
+      <div class="card">
+        <div class="stat green">₹4</div>
+        <div class="stat-label">Cost per AI call (vs ₹45 human)</div>
+        <p style="margin-top:12px; font-size:13px;">11x cheaper. ElevenLabs Nila voice — Indian English, natural cadence.</p>
+      </div>
+      <div class="card">
+        <div class="stat green">&lt;5 min</div>
+        <div class="stat-label">Total resolution time</div>
+        <p style="margin-top:12px; font-size:13px;">Bolna routes through Twilio. Agent calls in under 60s of trigger.</p>
+      </div>
+      <div class="card">
+        <div class="stat green">63%</div>
+        <div class="stat-label">Recovery rate (target)</div>
+        <p style="margin-top:12px; font-size:13px;">GPT-4o-mini extracts redelivery slot, consent, address updates.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: Architecture -->
+  <div class="slide" id="s4">
+    <div class="logo">ARCHITECTURE</div>
+    <h2>Production-grade, <span class="accent">not a prototype</span></h2>
+    <div class="grid grid-2" style="flex:1; gap:24px;">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="card-dark">
+          <h3 style="color:#60a5fa; margin-bottom:12px;">Backend</h3>
+          <ul>
+            <li>Next.js 16 App Router + Turbopack</li>
+            <li>Prisma 7 + PostgreSQL (adapter-pg)</li>
+            <li>JWT auth with HTTP-only cookies</li>
+            <li>Idempotent webhook with HMAC guard</li>
+            <li>42 unit tests + 6 E2E Playwright specs</li>
+          </ul>
+        </div>
+        <div class="card-dark">
+          <h3 style="color:#34d399; margin-bottom:12px;">Bolna V2 Integration</h3>
+          <ul>
+            <li>Agent: de639b14 (Priya, logistics specialist)</li>
+            <li>Voice: ElevenLabs "Nila" (Indian EN)</li>
+            <li>LLM: GPT-4o-mini for extraction</li>
+            <li>Webhook: POST /api/webhook/bolna</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-dark">
+        <h3 style="color:#a78bfa; margin-bottom:16px;">State Machine</h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="chip chip-red">FAILED_ATTEMPT</span>
+            <span style="color:#475569;">→ trigger call</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="chip chip-blue">CALL_SCHEDULED</span>
+            <span style="color:#475569;">→ webhook arrives</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span class="chip chip-green">REDELIVERY_CONFIRMED</span>
+          </div>
+        </div>
+        <div class="code" style="margin-top:24px;">
+          <span class="highlight">POST</span> /api/trigger-call<br/>
+          &nbsp;&nbsp;→ Bolna V2: <span class="highlight">/v2/call</span><br/>
+          &nbsp;&nbsp;→ callId stored in CallExecution<br/><br/>
+          <span class="highlight">POST</span> /api/webhook/bolna<br/>
+          &nbsp;&nbsp;→ verify HMAC secret<br/>
+          &nbsp;&nbsp;→ upsert CallExecution<br/>
+          &nbsp;&nbsp;→ update Shipment state
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: UI Demo -->
+  <div class="slide" id="s5">
+    <div class="logo">THE PRODUCT</div>
+    <h2>Premium enterprise UI — <span class="accent">Stitch MCP design system</span></h2>
+    <div class="grid grid-4" style="flex:1; align-items:start;">
+      <div class="card-dark" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:28px;">🔐</div>
+        <h3>Login</h3>
+        <p style="font-size:13px;">Split-panel layout. Navy gradient left, clean form right. Shimmer button animation.</p>
+        <span class="chip chip-blue" style="margin-top:auto; font-size:11px;">Floating labels</span>
+      </div>
+      <div class="card-dark" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:28px;">📊</div>
+        <h3>Dashboard</h3>
+        <p style="font-size:13px;">4 KPI cards, 7-day recovery trend chart (Recharts), recent shipments table.</p>
+        <span class="chip chip-blue" style="margin-top:auto; font-size:11px;">Live API data</span>
+      </div>
+      <div class="card-dark" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:28px;">📦</div>
+        <h3>Shipments Queue</h3>
+        <p style="font-size:13px;">Filter tabs, search, color-coded badges, one-click Trigger Call per shipment.</p>
+        <span class="chip chip-green" style="margin-top:auto; font-size:11px;">Trigger Call → Live</span>
+      </div>
+      <div class="card-dark" style="display:flex; flex-direction:column; gap:10px;">
+        <div style="font-size:28px;">🎯</div>
+        <h3>Detail Page</h3>
+        <p style="font-size:13px;">Call timeline, chat-bubble transcript, AI extracted data grid, slot highlighted.</p>
+        <span class="chip chip-green" style="margin-top:auto; font-size:11px;">Full call record</span>
+      </div>
+    </div>
+    <div style="margin-top:24px; padding:20px; background:rgba(37,99,235,0.1); border:1px solid rgba(37,99,235,0.3); border-radius:12px;">
+      <p style="font-size:14px;"><strong style="color:#60a5fa;">Tech:</strong> Inter font · Material Symbols icons · Recharts AreaChart · Glassmorphism headers · Stitch MCP generated screens</p>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: Real World Value -->
+  <div class="slide" id="s6">
+    <div class="logo">REAL WORLD IMPACT</div>
+    <h2>This is <span class="accent">Bolna's own sales pitch</span> — built</h2>
+    <div class="grid grid-2" style="flex:1; gap:24px;">
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="card">
+          <h3 style="margin-bottom:12px;">Why NDR is the right use case</h3>
+          <ul>
+            <li>Structured conversation (slot booking)</li>
+            <li>High volume, low variance calls</li>
+            <li>Clear success metric (slot confirmed)</li>
+            <li>Immediate ROI measurable per call</li>
+            <li>Bolna's own target customer segment</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3 style="margin-bottom:12px;">What makes this submission different</h3>
+          <ul>
+            <li>Actual Bolna V2 API (not mocked)</li>
+            <li>Real webhook state machine</li>
+            <li>Production Prisma schema with migrations</li>
+            <li>42 unit tests + 6 E2E specs</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-dark" style="display:flex; flex-direction:column; justify-content:center; gap:20px;">
+        <h3>Honest assessment of Bolna</h3>
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #1e293b;">
+            <span style="font-size:14px; color:rgba(255,255,255,0.7);">API stability (V1→V2 migration)</span>
+            <span class="chip chip-red">Challenging</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #1e293b;">
+            <span style="font-size:14px; color:rgba(255,255,255,0.7);">ElevenLabs Nila voice quality</span>
+            <span class="chip chip-green">Good for IN-EN</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid #1e293b;">
+            <span style="font-size:14px; color:rgba(255,255,255,0.7);">Webhook reliability</span>
+            <span class="chip chip-blue">No retry backoff</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 0;">
+            <span style="font-size:14px; color:rgba(255,255,255,0.7);">GPT-4o-mini slot extraction</span>
+            <span class="chip chip-blue">~70% accuracy</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: Submit -->
+  <div class="slide" id="s7">
+    <div class="logo">SUBMISSION</div>
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:24px;">
+      <div class="badge" style="font-size:14px; padding:8px 20px;">✅ Ready for review</div>
+      <h1 style="font-size:48px;">NDR Rescue</h1>
+      <p style="font-size:18px; max-width:600px; color:rgba(255,255,255,0.7);">An enterprise-grade voice AI platform that solves a real ₹4,500 Cr logistics problem using Bolna's own flagship use case.</p>
+      <div class="grid grid-3" style="width:100%; margin-top:16px;">
+        <div class="card" style="text-align:center;">
+          <div style="font-size:24px; margin-bottom:8px;">💻</div>
+          <h3>GitHub</h3>
+          <p style="font-size:12px; margin-top:4px;">github.com/tarandeep-juneja/ndr-rescue</p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:24px; margin-bottom:8px;">🌐</div>
+          <h3>Live Demo</h3>
+          <p style="font-size:12px; margin-top:4px;">ndr-rescue.vercel.app</p>
+        </div>
+        <div class="card" style="text-align:center;">
+          <div style="font-size:24px; margin-bottom:8px;">📞</div>
+          <h3>Call Recording</h3>
+          <p style="font-size:12px; margin-top:4px;">Live Bolna + Twilio via ngrok</p>
+        </div>
+      </div>
+      <p style="font-size:13px; color:#475569; margin-top:16px;">Tarandeep Singh Juneja &nbsp;·&nbsp; Meta Hacker Cup Rank 186 &nbsp;·&nbsp; IIT Bombay FOSSEE Intern</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation -->
+<div class="slide-num" id="slide-num">1 / 7</div>
+<div class="nav">
+  <button onclick="prev()">←</button>
+  <button onclick="next()">→</button>
+</div>
+
+<script>
+  let current = 0;
+  const slides = document.querySelectorAll('.slide');
+  const total = slides.length;
+
+  function show(n) {
+    slides[current].classList.remove('active');
+    current = (n + total) % total;
+    slides[current].classList.add('active');
+    document.getElementById('slide-num').textContent = `${current + 1} / ${total}`;
+  }
+  function next() { show(current + 1); }
+  function prev() { show(current - 1); }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') next();
+    if (e.key === 'ArrowLeft') prev();
+  });
+</script>
+</body>
+</html>
