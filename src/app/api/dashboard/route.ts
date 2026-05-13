@@ -52,8 +52,12 @@ export async function GET() {
     for (const s of recentShipments) {
       const day = format(new Date(s.createdAt), 'MMM d')
       if (!trendMap[day]) trendMap[day] = { recovered: 0, failed: 0 }
-      if (s.state === 'REDELIVERY_CONFIRMED') trendMap[day].recovered++
-      else if (s.state === 'FAILED_ATTEMPT') trendMap[day].failed++
+      if (s.state === 'REDELIVERY_CONFIRMED') {
+        trendMap[day].recovered++
+      } else {
+        // Count everything else (Failed, Scheduled, Canceled) as part of the NDR volume
+        trendMap[day].failed++
+      }
     }
 
     const weeklyTrend = Object.entries(trendMap).map(([date, v]) => ({ date, ...v }))
