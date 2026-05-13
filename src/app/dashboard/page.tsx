@@ -94,18 +94,31 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [today, setToday] = useState('')
 
-  useEffect(() => {
-    setToday(new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }))
-    // Load dashboard + recent shipments in parallel
-    Promise.all([
-      fetch('/api/dashboard').then(r => r.json()),
-      fetch('/api/shipments').then(r => r.json()),
-    ]).then(([dash, ships]) => {
+  async function loadData() {
+    try {
+      const [dash, ships] = await Promise.all([
+        fetch('/api/dashboard').then(r => r.json()),
+        fetch('/api/shipments').then(r => r.json()),
+      ])
       const shipList = Array.isArray(ships) ? ships : ships.shipments ?? []
       setData({ ...dash, recentShipments: shipList })
+    } finally {
       setLoading(false)
-    }).catch(() => setLoading(false))
+    }
+  }
+
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }))
+    loadData()
   }, [])
+
+  useEffect(() => {
+    // Poll the dashboard every 3 seconds if there are active calls
+    if (data?.inProgressShipments || data?.recentShipments?.some((s: any) => s.state === 'CALL_SCHEDULED')) {
+      const interval = setInterval(loadData, 3000)
+      return () => clearInterval(interval)
+    }
+  }, [data])
 
   return (
     <>

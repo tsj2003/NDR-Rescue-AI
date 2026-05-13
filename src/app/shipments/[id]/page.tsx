@@ -123,6 +123,15 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
 
   useEffect(() => { load() }, [id])
 
+  useEffect(() => {
+    if (!shipment) return
+    const isCallActive = shipment.state === 'CALL_SCHEDULED' || shipment.callExecutions.some(c => c.state === 'QUEUED' || c.state === 'IN_PROGRESS')
+    if (isCallActive) {
+      const interval = setInterval(load, 3000)
+      return () => clearInterval(interval)
+    }
+  }, [shipment?.state, shipment?.callExecutions?.[0]?.state])
+
   async function simulateWebhook() {
     setSimulating(true)
     try {

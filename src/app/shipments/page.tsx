@@ -113,6 +113,14 @@ export default function ShipmentsPage() {
     reloadShipments().then(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    const hasActiveCall = shipments.some(s => s.state === 'CALL_SCHEDULED')
+    if (hasActiveCall) {
+      const interval = setInterval(reloadShipments, 3000)
+      return () => clearInterval(interval)
+    }
+  }, [shipments])
+
   async function triggerCall(shipmentId: string) {
     setTriggering(shipmentId)
     try {
