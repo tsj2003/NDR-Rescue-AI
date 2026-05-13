@@ -2,9 +2,12 @@
 
 **Built by:** Tarandeep Singh Juneja  
 **Video Demo:** [Link to Google Drive/YouTube Demo here]  
-**Live App:** [Insert Vercel Link here if applicable]  
+**Live App:** [https://ndrrescue.netlify.app](https://ndrrescue.netlify.app)  
 
-Hey Bolna Team! 👋 This is my submission for the Full Stack Engineer assignment. Instead of building a generic AI caller, I decided to tackle a massive, expensive problem plaguing the Indian D2C e-commerce ecosystem: **Non-Delivery Reports (NDRs)**. 
+Hey Bolna Team! 👋 This is my submission for the Full Stack Engineer assignment. Instead of building a generic AI caller, I decided toThis document provides a comprehensive overview of the architecture, technologies used, and the step-by-step system workflow for the NDR (Non-Delivery Report) Rescue AI agent.
+
+**Live Link:** [https://ndrrescue.netlify.app](https://ndrrescue.netlify.app)
+ 
 
 Here is how I solved all 5 assignment objectives.
 

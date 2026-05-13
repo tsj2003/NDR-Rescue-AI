@@ -2,6 +2,8 @@
 
 This document provides a comprehensive overview of the architecture, technologies used, and the step-by-step system workflow for the NDR (Non-Delivery Report) Rescue AI agent.
 
+**Live Link:** [https://ndrrescue.netlify.app](https://ndrrescue.netlify.app)
+
 ## 🛠 Tech Stack
 
 ### Frontend

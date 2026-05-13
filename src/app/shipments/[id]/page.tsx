@@ -240,16 +240,6 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
               <div style={{ background: '#fff', border: '1px solid rgba(6,78,59,0.15)', borderRadius: 16, padding: 28, boxShadow: '0 4px 20px -10px rgba(6,78,59,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                   <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 24, color: '#064e3b', margin: 0 }}>Call Timeline</h2>
-                  {shipment.state === 'CALL_SCHEDULED' && (
-                    <button
-                      id="simulate-webhook-btn"
-                      onClick={simulateWebhook}
-                      disabled={simulating}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 14px', background: simulating ? '#64748b' : '#064e3b', color: '#fff', border: 'none', borderRadius: 99, fontSize: 12, fontWeight: 600, cursor: simulating ? 'not-allowed' : 'pointer', transition: 'all 0.2s' }}>
-                      <span className="material-symbols-outlined" style={{ fontSize: 14 }}>play_arrow</span>
-                      {simulating ? 'Simulating…' : 'Simulate Webhook'}
-                    </button>
-                  )}
                 </div>
 
                 {shipment.callExecutions.length === 0 ? (
