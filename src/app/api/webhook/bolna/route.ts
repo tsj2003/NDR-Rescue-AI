@@ -136,14 +136,22 @@ export async function POST(req: Request) {
     const extractedData = (payload.extracted_data ?? null) as Record<string, unknown> | null
     let { finalOutcome, newShipmentState, expectedSlot } = extractOutcome(extractedData)
 
-    // Fallback: if call completed but extraction was null, parse transcript for slot
+    // Fallback: if call completed but extraction was null, parse transcript for slot or cancel
     if (newCallState === 'COMPLETED' && !finalOutcome && transcript) {
-      const slotFromTranscript = extractSlotFromTranscript(transcript)
-      if (slotFromTranscript) {
-        finalOutcome = 'REDELIVERY_SLOT_BOOKED'
-        newShipmentState = 'REDELIVERY_CONFIRMED'
-        expectedSlot = slotFromTranscript
-        console.log(`[webhook/bolna] Slot extracted from transcript: "${slotFromTranscript}"`)
+      const tLower = transcript.toLowerCase()
+      // Detect cancellation
+      if (tLower.includes('cancel') || tLower.includes('do not want it') || tLower.includes("don't want it") || tLower.includes("return it")) {
+        finalOutcome = 'CANCELED_BY_CUSTOMER'
+        newShipmentState = 'CANCELED'
+        console.log(`[webhook/bolna] Cancellation extracted from transcript`)
+      } else {
+        const slotFromTranscript = extractSlotFromTranscript(transcript)
+        if (slotFromTranscript) {
+          finalOutcome = 'REDELIVERY_SLOT_BOOKED'
+          newShipmentState = 'REDELIVERY_CONFIRMED'
+          expectedSlot = slotFromTranscript
+          console.log(`[webhook/bolna] Slot extracted from transcript: "${slotFromTranscript}"`)
+        }
       }
     }
 
