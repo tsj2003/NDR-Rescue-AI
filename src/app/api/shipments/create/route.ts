@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { normalizePhone } from '@/lib/auth'
 
 export async function POST(req: Request) {
   try {
@@ -9,10 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Name, phone, and address are required' }, { status: 400 })
     }
 
-    // Normalize phone to E.164
-    let phone = customerPhone.replace(/\D/g, '')
-    if (phone.length === 10) phone = `+91${phone}`
-    else if (!phone.startsWith('+')) phone = `+${phone}`
+    const phone = normalizePhone(customerPhone)
 
     // Get the demo org
     const org = await prisma.organization.findFirst()

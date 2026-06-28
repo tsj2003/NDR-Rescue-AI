@@ -4,8 +4,24 @@ import { normalizePhone } from '@/lib/auth'
 
 const BOLNA_API_KEY = process.env.BOLNA_API_KEY
 const BOLNA_AGENT_ID = process.env.BOLNA_AGENT_ID
+const BOLNA_FROM_PHONE_NUMBER = process.env.BOLNA_FROM_PHONE_NUMBER
 const APP_URL = process.env.APP_URL || 'http://localhost:3000'
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'my-super-secret-webhook-key'
+
+function formatBolnaError(status: number, body: string): string {
+  if (!body) return `Bolna request failed with status ${status}`
+
+  try {
+    const parsed = JSON.parse(body) as { message?: unknown; error?: unknown; detail?: unknown }
+    const message = parsed.message ?? parsed.detail ?? parsed.error
+    if (typeof message === 'string') return message
+    if (message !== undefined) return JSON.stringify(message)
+  } catch {
+    // Fall through to the raw response text below.
+  }
+
+  return body
+}
 
 export async function POST(req: Request) {
   try {
@@ -53,6 +69,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           agent_id: BOLNA_AGENT_ID,
           recipient_phone_number: phoneNumber,
+          ...(BOLNA_FROM_PHONE_NUMBER ? { from_phone_number: BOLNA_FROM_PHONE_NUMBER } : {}),
           bypass_call_guardrails: true,
           // Bolna: 'user_data' injects into {placeholder} slots in agent prompt
           user_data: {
@@ -66,8 +83,12 @@ export async function POST(req: Request) {
 
       if (!bolnaRes.ok) {
         const err = await bolnaRes.text()
-        console.error('[trigger-call] Bolna error:', err)
-        return NextResponse.json({ error: 'Bolna API error', detail: err }, { status: 502 })
+        const detail = formatBolnaError(bolnaRes.status, err)
+        console.error('[trigger-call] Bolna error:', detail)
+        return NextResponse.json(
+          { error: 'Bolna API error', detail, bolnaStatus: bolnaRes.status },
+          { status: 502 }
+        )
       }
 
       const bolnaData = await bolnaRes.json()

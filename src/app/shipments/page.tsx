@@ -130,7 +130,7 @@ export default function ShipmentsPage() {
         toast.success(`Call queued — ID: ${data.callId?.slice(0, 8)}…`, { duration: 4000 })
         await reloadShipments()
       } else {
-        toast.error(data.error || 'Failed to trigger call')
+        toast.error(data.detail ? `${data.error}: ${data.detail}` : data.error || 'Failed to trigger call')
       }
     } catch {
       toast.error('Connection error')

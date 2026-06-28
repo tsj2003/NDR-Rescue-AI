@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { normalizePhone } from '@/lib/auth'
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,10 +28,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     const data: Record<string, unknown> = {}
     if (body.customerPhone) {
-      let phone = body.customerPhone.replace(/\D/g, '')
-      if (phone.length === 10) phone = `+91${phone}`
-      else if (!phone.startsWith('+')) phone = `+${phone}`
-      data.customerPhone = phone
+      data.customerPhone = normalizePhone(body.customerPhone)
     }
     if (body.customerName) data.customerName = body.customerName
     if (body.dropAddress) data.dropAddress = body.dropAddress
