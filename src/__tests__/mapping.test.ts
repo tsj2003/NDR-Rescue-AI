@@ -1,16 +1,10 @@
-import { describe, it, expect } from 'vitest'
-
-// ─── Status mapping ──────────────────────────────────────────────────────────
-
-function mapCallState(status: string): string {
-  switch (status?.toLowerCase()) {
-    case 'completed': case 'done': return 'COMPLETED'
-    case 'in_progress': case 'ringing': case 'answered': return 'IN_PROGRESS'
-    case 'failed': case 'error': return 'FAILED'
-    case 'no_answer': case 'busy': case 'no-answer': return 'NO_ANSWER'
-    default: return 'IN_PROGRESS'
-  }
-}
+import { describe, expect, it } from 'vitest'
+import {
+  buildNoAnswerFallback,
+  deriveOutcome,
+  mapCallState,
+  normalizeBolnaExtraction,
+} from '../lib/recovery'
 
 describe('mapCallState', () => {
   it.each([
@@ -24,89 +18,76 @@ describe('mapCallState', () => {
     ['no_answer', 'NO_ANSWER'],
     ['busy', 'NO_ANSWER'],
     ['no-answer', 'NO_ANSWER'],
+    ['voicemail', 'NO_ANSWER'],
     ['unknown_value', 'IN_PROGRESS'],
     ['', 'IN_PROGRESS'],
-  ])('maps %s → %s', (input, expected) => {
+  ])('maps %s to %s', (input, expected) => {
     expect(mapCallState(input)).toBe(expected)
   })
 })
 
-// ─── Extraction normalisation ────────────────────────────────────────────────
-
-function extractOutcome(data: Record<string, unknown> | null) {
-  if (!data) return { finalOutcome: null, newShipmentState: null, expectedSlot: null }
-  if (data.redelivery_slot || data.slot || data.preferred_slot) {
-    return {
-      finalOutcome: 'REDELIVERY_SLOT_BOOKED',
-      newShipmentState: 'REDELIVERY_CONFIRMED',
-      expectedSlot: String(data.redelivery_slot ?? data.slot ?? data.preferred_slot ?? ''),
-    }
-  }
-  if (data.correct_address || data.address_update) {
-    return { finalOutcome: 'ADDRESS_CORRECTED', newShipmentState: 'REDELIVERY_CONFIRMED', expectedSlot: null }
-  }
-  if (data.will_pickup === true) {
-    return { finalOutcome: 'WILL_PICKUP', newShipmentState: 'REDELIVERY_CONFIRMED', expectedSlot: null }
-  }
-  if (data.cancel === true) {
-    return { finalOutcome: 'CANCELED_BY_CUSTOMER', newShipmentState: 'CANCELED', expectedSlot: null }
-  }
-  if (data.escalate === true) {
-    return { finalOutcome: 'ESCALATED_TO_HUMAN', newShipmentState: 'MANUAL_REVIEW', expectedSlot: null }
-  }
-  return { finalOutcome: null, newShipmentState: 'MANUAL_REVIEW', expectedSlot: null }
-}
-
-describe('extractOutcome', () => {
-  it('returns REDELIVERY_SLOT_BOOKED for redelivery_slot', () => {
-    const r = extractOutcome({ redelivery_slot: 'Tomorrow 2PM' })
-    expect(r.finalOutcome).toBe('REDELIVERY_SLOT_BOOKED')
-    expect(r.newShipmentState).toBe('REDELIVERY_CONFIRMED')
-    expect(r.expectedSlot).toBe('Tomorrow 2PM')
+describe('Bolna extraction normalization and outcome', () => {
+  it('accepts varied slot field names', () => {
+    const extraction = normalizeBolnaExtraction({ preferred_delivery_slot: 'Tomorrow 2PM' })
+    const outcome = deriveOutcome(extraction, 'COMPLETED', null)
+    expect(outcome.finalOutcome).toBe('REDELIVERY_SLOT_BOOKED')
+    expect(outcome.newShipmentState).toBe('REDELIVERY_CONFIRMED')
+    expect(outcome.expectedSlot).toBe('Tomorrow 2PM')
   })
 
-  it('accepts slot alias', () => {
-    const r = extractOutcome({ slot: 'Friday morning' })
-    expect(r.finalOutcome).toBe('REDELIVERY_SLOT_BOOKED')
+  it('falls back to transcript slot parsing when structured extraction is missing', () => {
+    const extraction = normalizeBolnaExtraction(null)
+    const outcome = deriveOutcome(extraction, 'COMPLETED', 'Customer: Tomorrow afternoon between 2 and 6 PM works.')
+    expect(outcome.finalOutcome).toBe('REDELIVERY_SLOT_BOOKED')
+    expect(outcome.expectedSlot).toBe('Afternoon 2PM-6PM')
   })
 
-  it('returns ADDRESS_CORRECTED for address_update', () => {
-    const r = extractOutcome({ address_update: '12 Main St' })
-    expect(r.finalOutcome).toBe('ADDRESS_CORRECTED')
-    expect(r.newShipmentState).toBe('REDELIVERY_CONFIRMED')
+  it('marks completed calls with missing actionable fields for manual review', () => {
+    const extraction = normalizeBolnaExtraction({})
+    const outcome = deriveOutcome(extraction, 'COMPLETED', 'Customer: I am not sure.')
+    expect(outcome.finalOutcome).toBe('ESCALATED_TO_HUMAN')
+    expect(outcome.newShipmentState).toBe('MANUAL_REVIEW')
   })
 
-  it('returns WILL_PICKUP', () => {
-    const r = extractOutcome({ will_pickup: true })
-    expect(r.finalOutcome).toBe('WILL_PICKUP')
-  })
-
-  it('returns CANCELED_BY_CUSTOMER', () => {
-    const r = extractOutcome({ cancel: true })
-    expect(r.finalOutcome).toBe('CANCELED_BY_CUSTOMER')
-    expect(r.newShipmentState).toBe('CANCELED')
-  })
-
-  it('returns ESCALATED_TO_HUMAN', () => {
-    const r = extractOutcome({ escalate: true })
-    expect(r.finalOutcome).toBe('ESCALATED_TO_HUMAN')
-    expect(r.newShipmentState).toBe('MANUAL_REVIEW')
-  })
-
-  it('returns MANUAL_REVIEW for empty extraction', () => {
-    const r = extractOutcome({})
-    expect(r.finalOutcome).toBeNull()
-    expect(r.newShipmentState).toBe('MANUAL_REVIEW')
-  })
-
-  it('handles null gracefully', () => {
-    const r = extractOutcome(null)
-    expect(r.finalOutcome).toBeNull()
-    expect(r.newShipmentState).toBeNull()
+  it('marks no-answer as unreachable without falsely resolving the shipment', () => {
+    const extraction = normalizeBolnaExtraction({ unreachable: true })
+    const outcome = deriveOutcome(extraction, 'NO_ANSWER', null)
+    expect(outcome.finalOutcome).toBe('UNREACHABLE')
+    expect(outcome.newShipmentState).toBeNull()
   })
 })
 
-// ─── Dashboard metric calculation ────────────────────────────────────────────
+describe('no-answer fallback ladder', () => {
+  it('schedules a retry and self-serve link before max attempts', () => {
+    const result = buildNoAnswerFallback({
+      execution: { attemptNumber: 1 },
+      shipment: { retryCount: 0, recoveryToken: 'tok_123' },
+      appUrl: 'https://demo.example.com',
+      maxAttempts: 2,
+      retryDelayMinutes: 15,
+      now: new Date('2026-07-02T08:00:00.000Z'),
+    })
+
+    expect(result.fallbackStatus).toBe('RETRY_SCHEDULED')
+    expect(result.smsFollowupLink).toBe('https://demo.example.com/recovery/tok_123')
+    expect(result.nextRetryAt?.toISOString()).toBe('2026-07-02T08:15:00.000Z')
+  })
+
+  it('moves to manual review at the final attempt', () => {
+    const result = buildNoAnswerFallback({
+      execution: { attemptNumber: 2 },
+      shipment: { retryCount: 1, recoveryToken: 'tok_123' },
+      appUrl: 'https://demo.example.com',
+      maxAttempts: 2,
+      retryDelayMinutes: 15,
+      now: new Date('2026-07-02T08:00:00.000Z'),
+    })
+
+    expect(result.fallbackStatus).toBe('MANUAL_REVIEW')
+    expect(result.nextRetryAt).toBeNull()
+    expect(result.manualReviewReason).toMatch(/No answer after 2/)
+  })
+})
 
 describe('dashboard metric: recoveryRate', () => {
   function calcRecoveryRate(total: number, recovered: number): string {

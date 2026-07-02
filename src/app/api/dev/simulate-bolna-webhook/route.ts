@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
+import { getServerEnv } from '@/lib/env'
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    let { callId, shipmentId, status, transcript, extractedData } = body
+    const { shipmentId, scenario } = body
+    let { callId, status, transcript, extractedData } = body
 
     // If shipmentId provided, auto-look up the most recent QUEUED call
     if (!callId && shipmentId) {
@@ -44,9 +46,18 @@ export async function POST(req: Request) {
       cancel: false,
     }
 
+    if (scenario === 'no_answer') {
+      status = 'no_answer'
+      transcript = ''
+      extractedData = {
+        unreachable: true,
+        no_answer_reason: 'customer_did_not_pick_up',
+      }
+    }
+
     // Fire against our own webhook
-    const secret = process.env.WEBHOOK_SECRET || 'my-super-secret-webhook-key'
-    const webhookUrl = `${process.env.APP_URL || 'http://localhost:3000'}/api/webhook/bolna?secret=${secret}`
+    const env = getServerEnv()
+    const webhookUrl = `${env.APP_URL}/api/webhook/bolna?secret=${env.WEBHOOK_SECRET}`
 
     const response = await fetch(webhookUrl, {
       method: 'POST',

@@ -1,13 +1,20 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { normalizePhone } from '@/lib/auth'
+import { createRecoveryToken } from '@/lib/recovery'
 
 export async function POST(req: Request) {
   try {
-    const { customerName, customerPhone, dropAddress, failureReason } = await req.json()
+    const { customerName, customerPhone, dropAddress, failureReason, consentObtained } = await req.json()
 
     if (!customerName || !customerPhone || !dropAddress) {
       return NextResponse.json({ error: 'Name, phone, and address are required' }, { status: 400 })
+    }
+    if (consentObtained !== true) {
+      return NextResponse.json(
+        { error: 'Explicit customer opt-in is required before triggering automated calls' },
+        { status: 400 }
+      )
     }
 
     const phone = normalizePhone(customerPhone)
@@ -30,6 +37,8 @@ export async function POST(req: Request) {
         failureReason: (failureReason || 'ADDRESS_NOT_FOUND').replace(/ /g, '_').toUpperCase(),
         state: 'FAILED_ATTEMPT',
         consentObtained: true,
+        consentTime: new Date(),
+        recoveryToken: createRecoveryToken(),
       },
     })
 

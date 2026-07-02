@@ -9,8 +9,8 @@ This document provides a comprehensive overview of the architecture, technologie
 ### Frontend
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
-- **Styling**: Native CSS (`.css` files, custom design system inspired by modern Light/Serif aesthetics)
-- **Deployment**: Netlify Edge Functions
+- **Styling**: Tailwind-ready Next.js styling with a custom operations-console UI
+- **Deployment**: Vercel/Netlify compatible Next.js deployment
 
 ### Backend & API
 - **Framework**: Next.js API Routes (Serverless)
@@ -29,7 +29,7 @@ This document provides a comprehensive overview of the architecture, technologie
 
 ### Infrastructure & Operations
 - **Local Tunneling**: ngrok (Used during development for local webhook testing)
-- **Deployment & Hosting**: Netlify
+- **Deployment & Hosting**: Vercel or Netlify
 - **Version Control**: Git / GitHub
 
 ---
@@ -46,7 +46,7 @@ The NDR Rescue system is an end-to-end automated workflow designed to react to f
 1. An operator clicks **"Trigger Call"** on the dashboard.
 2. The frontend makes a `POST` request to the internal `/api/trigger-call` route.
 3. The backend fetches the shipment details (Customer Name, Tracking ID, Phone Number) from the database.
-4. The backend makes an API request to the **Bolna V2 `/agent/invoke` endpoint**, passing the customer's phone number and injecting their specific details into the `user_data` payload.
+4. The backend makes an API request to the **Bolna `/call` endpoint**, passing the customer's phone number and injecting their specific details into the `user_data` payload.
 5. The shipment status updates to `Call Scheduled` in the database.
 
 ### Step 3: The Voice AI Call
@@ -57,10 +57,16 @@ The NDR Rescue system is an end-to-end automated workflow designed to react to f
 
 ### Step 4: Webhook Processing
 1. Immediately after the call ends, Bolna sends an automated `POST` webhook to the app's exposed endpoint (`/api/webhook/bolna`).
-2. The webhook payload contains the **call transcript** and the **extracted JSON parameters** (e.g., `{"rescheduled_time": "Tomorrow at 10 AM"}`).
-3. The backend validates the webhook secret using an HMAC signature to ensure security.
+2. The webhook payload contains the **call transcript** and the **extracted JSON parameters** (e.g., `{"redelivery_slot": "Tomorrow at 10 AM"}`).
+3. The backend validates the webhook URL secret and processes the webhook idempotently by unique call ID.
+
+### Step 4B: No-Answer Fallback
+1. If Bolna reports `no_answer`, `busy`, or `voicemail`, the app marks the call `NO_ANSWER`.
+2. The shipment receives a generated `/recovery/:token` link for SMS/WhatsApp follow-up.
+3. A voice retry is scheduled using `NO_ANSWER_RETRY_MINUTES`.
+4. After `MAX_CALL_ATTEMPTS`, the shipment moves to `MANUAL_REVIEW`.
 
 ### Step 5: Database Update & Analytics
 1. The backend parses the Bolna webhook data.
 2. It updates the Prisma database, marking the shipment status as `Recovered` and saving the new `rescheduledTime`.
-3. The dashboard UI immediately reflects this success state, moving the shipment to the "Recovered" tab and updating overall operational analytics.
+3. The dashboard UI immediately reflects this success state through Server-Sent Events, moving the shipment to the "Recovered" tab and updating overall operational analytics.

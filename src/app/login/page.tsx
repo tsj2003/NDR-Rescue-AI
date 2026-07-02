@@ -101,7 +101,7 @@ export default function LoginPage() {
 
           <div style={{ position: 'relative', zIndex: 10, marginTop: '-4rem' }}>
             <h1 className="hero-text" style={{ marginBottom: '1.5rem' }}>
-              Don't call,<br /><span>just deploy.</span>
+              Don&apos;t call,<br /><span>just deploy.</span>
             </h1>
             <p style={{ fontFamily: "'Inter', sans-serif", fontSize: '1.25rem', color: '#064e3b', opacity: 0.8, maxWidth: '400px', lineHeight: 1.5, marginBottom: '3rem' }}>
               The AI agent that turns failed deliveries into confirmed slots in under 5 minutes.

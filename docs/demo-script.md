@@ -1,169 +1,153 @@
-# NDR Rescue — Demo Script
+# NDR Rescue Demo Script
 
-> Timestamped walk-through for the assignment checklist.  
-> Total demo duration: ~8 minutes
+Target length: 5-7 minutes.
 
----
-
-## Setup (before the demo)
+## Before Recording
 
 ```bash
-# 1. Start Postgres
-docker-compose up -d
-
-# 2. Seed demo data
-npm run seed
-
-# 3. Start the dev server
+cp .env.example .env
+npm run demo:setup
 npm run dev
 ```
 
-Open a second terminal and keep it ready for API calls.
+Open `http://localhost:3000/login`.
 
----
+Demo login: `demo@logistics.com` / `demo1234`.
 
-## [0:00] Problem Introduction
+## 0:00-0:35 — Problem and Business Case
 
-> *"Failed deliveries cost Indian e-commerce ₹3,200 crore annually. Every re-attempt costs ₹80–₹150 and erodes customer trust. NDR Rescue solves this with a fully automated AI voice agent that calls customers within minutes of a failed delivery, schedules redelivery, and updates your logistics system in real time — no human intervention required."*
+Say:
 
-**Key metrics:**
-- 63% of NDRs can be resolved on the first AI call
-- Average call duration: 90 seconds
-- Cost per resolved NDR: ~₹4 (vs. ₹150 for human agent)
+> "This is NDR Rescue, a Bolna-powered failed-delivery recovery console. Failed deliveries are expensive because operations teams manually call customers, arrange redelivery, and prevent return-to-origin. The speed angle matters: if we call within minutes, we can recover the parcel before it leaves the hub."
 
----
+Point to:
 
-## [1:00] Web App — Login
+- Total NDRs and recovery KPI.
+- 7-day recovery chart.
 
-1. Open **http://localhost:3000** → redirects to `/login`
-2. Credentials are pre-filled: `demo@logistics.com` / `demo1234`
-3. Click **Sign in** → lands on Dashboard
+Say:
 
----
+> "At scale, a top logistics client with 1M failed deliveries per month and a $2 charge per saved shipment can support roughly $24M ARR. Four or five enterprise clients creates a 1000 Cr scale business."
 
-## [1:30] Web App — Dashboard (before calls)
+## 0:35-1:25 — Consent and Shipment Creation
 
-Point out:
-- **Total NDRs**: 3 (seeded)
-- **Recovery Rate**: 0% (no calls completed yet)
-- **7-Day Trend** chart: flat (no historical data yet)
+Click:
 
----
+1. Sidebar: **Shipments**
+2. **Add Shipment**
+3. Fill:
+   - Customer: `Meera Kapoor`
+   - Phone: your test number or `9876543210`
+   - Address: `221 Indiranagar 12th Main, Bengaluru`
+   - Failure reason: `CUSTOMER_NOT_AVAILABLE`
+4. Check the consent box:
+   - "I confirm the customer has opted in to receive an automated AI voice call..."
+5. Click **Add Shipment**
 
-## [2:00] Web App — Shipment Queue
+Say:
 
-1. Click **Shipments** in the sidebar
-2. Show the table: 3 shipments, all `Failed Attempt` state
-3. Point out the failure reasons: `Customer unavailable`, `Address not found`, `Gate locked`
-4. Use the search bar to filter by "TRK10001"
+> "I do not trigger outbound automated calls unless explicit opt-in is stored. The database stores `consentObtained` and `consentTime`, and the trigger endpoint rejects calls without consent."
 
----
+## 1:25-2:10 — Trigger Bolna Call
 
-## [2:30] Trigger AI Call (simulated)
+Click:
 
-1. Click **Trigger Call** for `TRK10001 — Priya Sharma`
-2. Show the sonner toast: *"Call queued — ID: mock-call-xxxxx"*
-3. Row status changes to **Call Scheduled**
-4. Click **View** to open the detail page
+1. **Trigger Call** on the new shipment.
+2. Open the shipment detail page.
 
-*[Real production mode]*: This sends a live call via Bolna's API to the customer's phone. The agent uses the ElevenLabs voice, Deepgram transcription, and GPT-4o-mini for conversation.
+Say:
 
----
+> "The backend calls Bolna's outbound call API with the agent ID, customer phone number, and `user_data` fields: customer name, tracking number, address, and failure reason. In production this places a real phone call; locally I can use the simulator while preserving the same webhook path."
 
-## [3:30] Shipment Detail Page
+Point to:
 
-Point out:
-- Customer panel (name, phone, address)
-- Failure reason, consent status, slot
-- Call timeline — 1 queued call visible
-- **Simulate Webhook** button (dev only)
+- `Live SSE` badge.
+- Call timeline with attempt number.
+- Consent timestamp.
 
----
+## 2:10-3:10 — Successful Call Path
 
-## [4:00] Backend Processing — Simulate Webhook
+Click:
 
-1. Click **Simulate Webhook**
-2. Behind the scenes: calls `POST /api/dev/simulate-bolna-webhook` which hits `POST /api/webhook/bolna?secret=...`
-3. Webhook logic:
-   - Validates secret ✓
-   - Parses `status: "completed"`, `extracted_data: { redelivery_slot: "Tomorrow 2PM-6PM" }` ✓
-   - Maps extracted data → `FinalOutcome.REDELIVERY_SLOT_BOOKED` ✓
-   - Updates `CallExecution.state → COMPLETED` ✓
-   - Updates `Shipment.state → REDELIVERY_CONFIRMED` ✓
-   - Writes `AuditEvent` for full traceability ✓
-   - Idempotency: duplicate webhooks are ignored ✓
+1. **Complete** in the Call Timeline.
 
-4. Show the sonner toast: *"Webhook simulated — refreshing…"*
-5. Page refreshes → status is now **Recovered ✓**
+Say:
 
----
+> "This simulates Bolna posting a completed call webhook. The webhook validates the secret, finds the call by unique call ID, normalizes Bolna's extraction fields, and updates the shipment."
 
-## [5:00] Post-Call Detail View
+Point to:
 
-Point out:
-- Call state: `COMPLETED`
-- Final outcome: `REDELIVERY_SLOT_BOOKED`
-- **Transcript panel** with the full conversation
-- **Extracted Data** JSON panel:
-  ```json
-  {
-    "redelivery_slot": "Tomorrow 2PM-6PM",
-    "consent": true
-  }
-  ```
-- Audit trail: `CALL_TRIGGERED → STATE_CHANGED`
+- Shipment state changes to `REDELIVERY_CONFIRMED`.
+- Transcript panel appears.
+- Extracted data panel appears.
 
----
+Say:
 
-## [5:45] Dashboard Update
+> "Extraction reliability matters. Bolna may return `redelivery_slot`, `preferred_slot`, `delivery_slot`, or other variants. I normalize those into one internal shape. If structured extraction is missing, the webhook parses the transcript for slot phrases like 'tomorrow afternoon between 2 and 6 PM'. If no actionable slot exists, the shipment goes to manual review instead of pretending it recovered."
 
-1. Navigate to **Dashboard**
-2. Show updated metrics:
-   - **Recovered**: 1
-   - **Recovery Rate**: 33.3%
-3. The trend chart now has data for today
+## 3:10-4:30 — Missed-Call Fallback
 
----
+Go back to **Shipments**, trigger another failed shipment, and open its detail page.
 
-## [6:30] Business Impact Summary
+Click:
 
-| Metric | Before NDR Rescue | After NDR Rescue |
-|--------|------------------|-----------------|
-| Resolution time | 24–48 hours (human callback) | < 5 minutes (AI call) |
-| Cost per NDR | ₹150/agent call | ₹4/AI call |
-| Resolution rate | 42% (industry avg) | 63% (AI-assisted) |
-| Scale | Limited by agent headcount | Unlimited concurrent calls |
+1. **No answer** in the Call Timeline.
 
-*"NDR Rescue replaces a reactive, expensive, slow process with a proactive, near-free, instant one. The integration takes under 30 minutes with any existing logistics platform via our webhook."*
+Say:
 
----
+> "This answers the operational question: what if the customer does not pick up? The webhook marks the call as `NO_ANSWER`, generates a real self-serve recovery link for SMS or WhatsApp, schedules the next voice retry, and updates the UI over Server-Sent Events without a page refresh."
 
-## [7:30] Technical Architecture (optional)
+Point to:
 
-```
-Customer Phone ←→ Bolna Voice Agent
-                       │
-                  Webhook POST → /api/webhook/bolna
-                       │
-                   Prisma ORM → PostgreSQL
-                       │
-                  Next.js API Routes
-                       │
-                  React Dashboard
-```
+- `No-Answer Fallback Ladder`
+- `RETRY_SCHEDULED`
+- next retry time
+- self-serve recovery link
 
-Stack: **Next.js 16 · Prisma 7 · PostgreSQL · Bolna AI · ElevenLabs · Deepgram · Tailwind CSS**
+Say:
 
----
+> "The retry ladder is configurable with `NO_ANSWER_RETRY_MINUTES` and `MAX_CALL_ATTEMPTS`. After the final attempt, the shipment moves to `MANUAL_REVIEW` with the recovery link still open."
 
-## Appendix — Key API Endpoints
+## 4:30-5:20 — Customer Self-Serve Link
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/auth/login` | Login with email/password |
-| `GET` | `/api/shipments` | List all shipments |
-| `GET` | `/api/shipments/:id` | Shipment detail + call history |
-| `POST` | `/api/trigger-call` | Dispatch AI call via Bolna |
-| `POST` | `/api/webhook/bolna` | Receive call events from Bolna |
-| `GET` | `/api/dashboard` | KPI metrics + trend data |
-| `POST` | `/api/dev/simulate-bolna-webhook` | Dev-only: simulate a completed call |
+Click or copy the recovery link and open it in a new tab.
+
+Click:
+
+1. Choose `Tomorrow 12PM-5PM`.
+2. Click **Confirm Slot**.
+
+Say:
+
+> "This is the fallback if voice fails. The customer can recover the shipment without an agent by confirming a slot, correcting the address, choosing pickup, or cancelling. The same shipment record updates in the operations dashboard."
+
+Return to the shipment detail page and point out:
+
+- State is recovered.
+- Fallback status is complete.
+- Expected slot is stored.
+
+## 5:20-6:10 — Dashboard and Architecture
+
+Click:
+
+1. Sidebar: **Overview**
+
+Say:
+
+> "The dashboard now shows recovered shipments and trend data. The system is intentionally simple to deploy: Next.js API routes, Prisma/PostgreSQL, Bolna for voice, webhook idempotency by call ID, and SSE for live updates."
+
+Mention:
+
+- `POST /api/trigger-call`
+- `POST /api/webhook/bolna`
+- `GET /api/call-events`
+- `POST /api/recovery/retry-due`
+
+## 6:10-6:45 — Closing
+
+Say:
+
+> "This is not just a voice demo; it is a real enterprise workflow. It handles consent, call outcomes, extraction reliability, no-answer fallback, operator review, customer self-serve recovery, and live operational visibility."
+
+End on the dashboard.

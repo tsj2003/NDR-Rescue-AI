@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import * as dotenv from 'dotenv'
+import { createRecoveryToken } from '../../src/lib/recovery'
 
 dotenv.config()
 
@@ -46,6 +47,8 @@ async function main() {
         failureReason: 'CUSTOMER_NOT_AVAILABLE',
         organizationId: org.id,
         consentObtained: true,
+        consentTime: new Date(),
+        recoveryToken: createRecoveryToken(),
       },
       {
         trackingNumber: 'TRK10002',
@@ -56,6 +59,8 @@ async function main() {
         failureReason: 'ADDRESS_NOT_FOUND',
         organizationId: org.id,
         consentObtained: true,
+        consentTime: new Date(),
+        recoveryToken: createRecoveryToken(),
       },
       {
         trackingNumber: 'TRK10003',
@@ -66,6 +71,8 @@ async function main() {
         failureReason: 'GATE_LOCKED',
         organizationId: org.id,
         consentObtained: true,
+        consentTime: new Date(),
+        recoveryToken: createRecoveryToken(),
       },
     ],
   })

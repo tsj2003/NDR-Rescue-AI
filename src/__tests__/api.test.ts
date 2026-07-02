@@ -54,9 +54,10 @@ describe('webhook idempotency guard', () => {
 // ─── Trigger-call: state guard ───────────────────────────────────────────────
 
 describe('trigger-call state guard', () => {
-  function canTriggerCall(state: string, consentObtained: boolean): { ok: boolean; reason?: string } {
+  function canTriggerCall(state: string, consentObtained: boolean, hasActiveCall = false): { ok: boolean; reason?: string } {
     if (!consentObtained) return { ok: false, reason: 'Customer consent not obtained' }
-    if (state !== 'FAILED_ATTEMPT') return { ok: false, reason: `Cannot trigger — state is ${state}` }
+    if (hasActiveCall) return { ok: false, reason: 'Call already active' }
+    if (state === 'REDELIVERY_CONFIRMED' || state === 'CANCELED') return { ok: false, reason: `Cannot trigger - state is ${state}` }
     return { ok: true }
   }
 
@@ -70,8 +71,17 @@ describe('trigger-call state guard', () => {
     expect(r.reason).toMatch(/consent/)
   })
 
-  it('blocks trigger for non-FAILED_ATTEMPT states', () => {
-    for (const state of ['CALL_SCHEDULED', 'CALL_IN_PROGRESS', 'REDELIVERY_CONFIRMED']) {
+  it('allows scheduled retry and manual-review reattempts when no call is active', () => {
+    expect(canTriggerCall('CALL_SCHEDULED', true).ok).toBe(true)
+    expect(canTriggerCall('MANUAL_REVIEW', true).ok).toBe(true)
+  })
+
+  it('blocks trigger when another call is active', () => {
+    expect(canTriggerCall('CALL_SCHEDULED', true, true).ok).toBe(false)
+  })
+
+  it('blocks trigger for terminal states', () => {
+    for (const state of ['REDELIVERY_CONFIRMED', 'CANCELED']) {
       const r = canTriggerCall(state, true)
       expect(r.ok).toBe(false)
     }

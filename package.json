@@ -8,11 +8,15 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "ts-node --project tsconfig.scripts.json prisma/seed/seed.ts",
+    "demo:setup": "node scripts/setup-demo.mjs",
     "setup-bolna": "ts-node --project tsconfig.scripts.json scripts/setup-bolna-agent.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
     "test:e2e": "playwright test"
+  },
+  "prisma": {
+    "seed": "ts-node --project tsconfig.scripts.json prisma/seed/seed.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

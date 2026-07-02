@@ -13,7 +13,7 @@ test.describe('NDR Rescue E2E Flow', () => {
 
   test('login redirects to dashboard', async ({ page }) => {
     await expect(page).toHaveURL(`${BASE}/dashboard`)
-    await expect(page.locator('h1')).toContainText('Dashboard')
+    await expect(page.locator('h1')).toContainText('Overview')
   })
 
   test('dashboard shows KPI cards', async ({ page }) => {
@@ -82,6 +82,32 @@ test.describe('NDR Rescue E2E Flow', () => {
 
     // Wait for transcript to appear (page refreshes after 500ms)
     await expect(page.locator('text=Transcript').first()).toBeVisible({ timeout: 15_000 })
+  })
+
+  test('missed call creates fallback ladder with recovery link', async ({ page }) => {
+    await page.goto(`${BASE}/shipments`)
+    await page.waitForLoadState('networkidle')
+
+    const triggerBtn = page.locator('[id^="trigger-call-"]').first()
+    const triggerCount = await triggerBtn.count()
+    if (triggerCount === 0) {
+      test.skip(true, 'No FAILED_ATTEMPT shipments available - seed the DB')
+      return
+    }
+
+    const btnId = await triggerBtn.getAttribute('id') ?? ''
+    const shipmentId = btnId.replace('trigger-call-', '')
+
+    await triggerBtn.click()
+    await expect(page.locator('text=Call queued').first()).toBeVisible({ timeout: 10_000 })
+
+    await page.goto(`${BASE}/shipments/${shipmentId}`)
+    await expect(page.locator('#simulate-no-answer-btn')).toBeVisible({ timeout: 5_000 })
+    await page.click('#simulate-no-answer-btn')
+
+    await expect(page.locator('text=Missed-call webhook simulated').first()).toBeVisible({ timeout: 10_000 })
+    await expect(page.locator('text=No-Answer Fallback Ladder')).toBeVisible({ timeout: 15_000 })
+    await expect(page.locator('text=RETRY SCHEDULED').first()).toBeVisible({ timeout: 15_000 })
   })
 
   test('logout clears session', async ({ page }) => {

@@ -32,6 +32,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
     if (body.customerName) data.customerName = body.customerName
     if (body.dropAddress) data.dropAddress = body.dropAddress
+    if (typeof body.consentObtained === 'boolean') {
+      data.consentObtained = body.consentObtained
+      data.consentTime = body.consentObtained ? new Date() : null
+    }
 
     const shipment = await prisma.shipment.update({ where: { id }, data })
     return NextResponse.json({ success: true, shipment })

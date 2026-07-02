@@ -74,6 +74,13 @@ model Shipment {
   consentObtained Boolean       @default(false)
   consentTime     DateTime?
   expectedSlot    String?
+  recoveryToken   String?       @unique
+  fallbackStatus  String        @default("NONE")
+  retryCount      Int           @default(0)
+  nextRetryAt     DateTime?
+  lastFallbackAt  DateTime?
+  smsFollowupLink String?
+  manualReviewReason String?
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -87,6 +94,7 @@ model CallExecution {
   recordingUrl String?
   extractedData Json?
   finalOutcome FinalOutcome?
+  attemptNumber Int           @default(1)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   webhookCount Int           @default(0)

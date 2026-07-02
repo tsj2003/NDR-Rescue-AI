@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, use } from 'react'
+import { useCallback, useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -7,12 +7,15 @@ const GICON = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outline
 
 type CallExecution = {
   id: string; state: string; createdAt: string; updatedAt: string
+  attemptNumber?: number
   transcript?: string | null; extractedData?: Record<string, unknown> | null; finalOutcome?: string | null
 }
 type ShipmentDetail = {
   id: string; trackingNumber: string; customerName: string; customerPhone: string
   dropAddress: string; failureReason: string; state: string; consentObtained: boolean
-  expectedSlot?: string | null; updatedAt: string
+  consentTime?: string | null; expectedSlot?: string | null; updatedAt: string
+  fallbackStatus?: string | null; retryCount?: number; nextRetryAt?: string | null
+  smsFollowupLink?: string | null; manualReviewReason?: string | null
   callExecutions: CallExecution[]
 }
 
@@ -71,6 +74,7 @@ function Sidebar({ active }: { active: string }) {
 const STATE_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   FAILED_ATTEMPT: { bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
   CALL_SCHEDULED: { bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
+  MANUAL_REVIEW: { bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
   REDELIVERY_CONFIRMED: { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' },
   CANCELED: { bg: '#f8fafc', color: '#475569', border: '#e2e8f0' },
 }
@@ -79,6 +83,7 @@ const CALL_STATE_STYLE: Record<string, { color: string; icon: string }> = {
   IN_PROGRESS: { color: '#2563eb', icon: 'phone_in_talk' },
   COMPLETED: { color: '#059669', icon: 'check_circle' },
   FAILED: { color: '#b91c1c', icon: 'cancel' },
+  NO_ANSWER: { color: '#9333ea', icon: 'phone_missed' },
 }
 
 function TranscriptBubble({ text, role }: { text: string; role: 'ai' | 'customer' }) {
@@ -114,31 +119,53 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
   const [shipment, setShipment] = useState<ShipmentDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [simulating, setSimulating] = useState(false)
+  const [liveConnected, setLiveConnected] = useState(false)
 
-  async function load() {
+  const load = useCallback(async () => {
     const res = await fetch(`/api/shipments/${id}`)
     if (res.ok) { const d = await res.json(); setShipment(d) }
     setLoading(false)
-  }
+  }, [id])
 
-  useEffect(() => { load() }, [id])
+  useEffect(() => {
+    const timer = window.setTimeout(() => { void load() }, 0)
+    return () => window.clearTimeout(timer)
+  }, [load])
+
+  useEffect(() => {
+    const events = new EventSource(`/api/call-events?shipmentId=${id}`)
+    events.onopen = () => setLiveConnected(true)
+    events.addEventListener('shipment', (event) => {
+      setShipment(JSON.parse((event as MessageEvent).data))
+      setLoading(false)
+    })
+    events.onerror = () => {
+      setLiveConnected(false)
+      events.close()
+    }
+    return () => {
+      events.close()
+      setLiveConnected(false)
+    }
+  }, [id])
 
   useEffect(() => {
     if (!shipment) return
+    if (liveConnected) return
     const isCallActive = shipment.state === 'CALL_SCHEDULED' || shipment.callExecutions.some(c => c.state === 'QUEUED' || c.state === 'IN_PROGRESS')
     if (isCallActive) {
       const interval = setInterval(load, 3000)
       return () => clearInterval(interval)
     }
-  }, [shipment?.state, shipment?.callExecutions?.[0]?.state])
+  }, [shipment, shipment?.state, shipment?.callExecutions?.[0]?.state, liveConnected, load])
 
-  async function simulateWebhook() {
+  async function simulateWebhook(scenario?: 'completed' | 'no_answer') {
     setSimulating(true)
     try {
-      const res = await fetch('/api/dev/simulate-bolna-webhook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shipmentId: id }) })
+      const res = await fetch('/api/dev/simulate-bolna-webhook', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ shipmentId: id, scenario }) })
       const data = await res.json()
       if (res.ok) {
-        toast.success('Webhook simulated — refreshing…')
+        toast.success(scenario === 'no_answer' ? 'Missed-call webhook simulated' : 'Webhook simulated')
         setTimeout(() => load(), 600)
       } else {
         toast.error(data.error || 'Simulation failed')
@@ -189,6 +216,10 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
             <span style={{ color: '#cbd5e1' }}>/</span>
             <span style={{ fontSize: 14, fontWeight: 700, color: '#064e3b', fontFamily: 'monospace' }}>{shipment.trackingNumber}</span>
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 10px', borderRadius: 999, fontSize: 11, fontWeight: 700, background: liveConnected ? '#ecfdf5' : '#f8fafc', color: liveConnected ? '#047857' : '#64748b', border: `1px solid ${liveConnected ? '#a7f3d0' : '#e2e8f0'}` }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: liveConnected ? '#10b981' : '#94a3b8' }} />
+                {liveConnected ? 'Live SSE' : 'Polling'}
+              </span>
               <span style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 12px', borderRadius: 999, fontSize: 12, fontWeight: 700, background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}>
                 {shipment.state.replace(/_/g, ' ')}
               </span>
@@ -217,6 +248,8 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
                     { icon: 'location_on', label: 'Drop Address', value: shipment.dropAddress },
                     { icon: 'warning', label: 'Failure Reason', value: shipment.failureReason.replace(/_/g, ' '), chip: true, chipColor: '#fef2f2', chipText: '#b91c1c', chipBorder: '#fecaca' },
                     { icon: 'verified', label: 'Consent', value: shipment.consentObtained ? 'Obtained ✓' : 'Not obtained', valueColor: shipment.consentObtained ? '#059669' : '#b91c1c' },
+                    ...(shipment.consentTime ? [{ icon: 'history', label: 'Consent Time', value: new Date(shipment.consentTime).toLocaleString('en-IN') }] : []),
+                    ...(shipment.fallbackStatus && shipment.fallbackStatus !== 'NONE' ? [{ icon: 'alt_route', label: 'Fallback', value: shipment.fallbackStatus.replace(/_/g, ' '), chip: true, chipColor: '#f5f3ff', chipText: '#6d28d9', chipBorder: '#ddd6fe' }] : []),
                     ...(shipment.expectedSlot ? [{ icon: 'calendar_today', label: 'Booked Slot', value: shipment.expectedSlot, highlight: true }] : []),
                   ].map(f => (
                     <div key={f.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
@@ -240,6 +273,16 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
               <div style={{ background: '#fff', border: '1px solid rgba(6,78,59,0.15)', borderRadius: 16, padding: 28, boxShadow: '0 4px 20px -10px rgba(6,78,59,0.05)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
                   <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 24, color: '#064e3b', margin: 0 }}>Call Timeline</h2>
+                  {latestCall && (latestCall.state === 'QUEUED' || latestCall.state === 'IN_PROGRESS') && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button id="simulate-webhook-btn" onClick={() => simulateWebhook('completed')} disabled={simulating} style={{ height: 32, padding: '0 12px', borderRadius: 99, border: '1px solid #bbf7d0', background: '#f0fdf4', color: '#166534', fontSize: 11, fontWeight: 800, cursor: simulating ? 'not-allowed' : 'pointer' }}>
+                        Complete
+                      </button>
+                      <button id="simulate-no-answer-btn" onClick={() => simulateWebhook('no_answer')} disabled={simulating} style={{ height: 32, padding: '0 12px', borderRadius: 99, border: '1px solid #ddd6fe', background: '#f5f3ff', color: '#6d28d9', fontSize: 11, fontWeight: 800, cursor: simulating ? 'not-allowed' : 'pointer' }}>
+                        No answer
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {shipment.callExecutions.length === 0 ? (
@@ -262,7 +305,7 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
                           </div>
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                              <span style={{ fontSize: 14, fontWeight: 600, color: '#064e3b' }}>Call {call.state.replace(/_/g, ' ')}</span>
+                              <span style={{ fontSize: 14, fontWeight: 600, color: '#064e3b' }}>Attempt {call.attemptNumber ?? idx + 1}: {call.state.replace(/_/g, ' ')}</span>
                               {call.finalOutcome && (
                                 <span style={{ fontSize: 10, fontWeight: 700, background: '#f0fdf4', color: '#166534', border: '1px solid #bbf7d0', padding: '2px 8px', borderRadius: 999 }}>
                                   {call.finalOutcome.replace(/_/g, ' ')}
@@ -281,6 +324,51 @@ export default function ShipmentDetailPage({ params }: { params: Promise<{ id: s
                 )}
               </div>
             </div>
+
+            {/* Fallback Ladder */}
+            {shipment.fallbackStatus && shipment.fallbackStatus !== 'NONE' && (
+              <div style={{ background: '#fff', border: '1px solid rgba(109,40,217,0.18)', borderRadius: 16, padding: 24, marginBottom: 24, boxShadow: '0 4px 20px -10px rgba(109,40,217,0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 20, alignItems: 'flex-start' }}>
+                  <div>
+                    <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 24, color: '#064e3b', margin: '0 0 6px' }}>No-Answer Fallback Ladder</h2>
+                    <p style={{ fontSize: 13, color: '#64748b', lineHeight: 1.6, margin: 0 }}>
+                      {shipment.fallbackStatus === 'RETRY_SCHEDULED'
+                        ? `SMS/WhatsApp link generated and voice retry scheduled${shipment.nextRetryAt ? ` for ${new Date(shipment.nextRetryAt).toLocaleString('en-IN')}` : ''}.`
+                        : shipment.fallbackStatus === 'MANUAL_REVIEW'
+                          ? shipment.manualReviewReason || 'Ops review required after automated recovery attempts.'
+                          : 'Fallback flow is active for this shipment.'}
+                    </p>
+                  </div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: '#f5f3ff', color: '#6d28d9', border: '1px solid #ddd6fe', fontSize: 11, fontWeight: 800 }}>
+                    {shipment.fallbackStatus.replace(/_/g, ' ')}
+                  </span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 18 }}>
+                  <div style={{ padding: 14, borderRadius: 12, background: '#f7f5ed', border: '1px solid rgba(6,78,59,0.08)' }}>
+                    <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Voice Attempts</p>
+                    <p style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#064e3b' }}>{shipment.retryCount ?? latestCall?.attemptNumber ?? 0}</p>
+                  </div>
+                  <div style={{ padding: 14, borderRadius: 12, background: '#f7f5ed', border: '1px solid rgba(6,78,59,0.08)' }}>
+                    <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Next Retry</p>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#064e3b' }}>{shipment.nextRetryAt ? new Date(shipment.nextRetryAt).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Not scheduled'}</p>
+                  </div>
+                  <div style={{ padding: 14, borderRadius: 12, background: '#f7f5ed', border: '1px solid rgba(6,78,59,0.08)', minWidth: 0 }}>
+                    <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 800, color: '#64748b', letterSpacing: '0.05em', textTransform: 'uppercase' }}>Self-Serve Link</p>
+                    {shipment.smsFollowupLink ? (
+                      <button
+                        onClick={() => navigator.clipboard.writeText(shipment.smsFollowupLink || '').then(() => toast.success('Recovery link copied'))}
+                        style={{ border: 'none', background: 'transparent', padding: 0, margin: 0, color: '#064e3b', fontSize: 12, fontWeight: 700, cursor: 'pointer', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}
+                        title={shipment.smsFollowupLink}
+                      >
+                        {shipment.smsFollowupLink}
+                      </button>
+                    ) : (
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#94a3b8' }}>Not generated</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Transcript */}
             {latestCall?.transcript && (

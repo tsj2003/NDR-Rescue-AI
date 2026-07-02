@@ -1,10 +1,10 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
-const GFONT = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap'
 const GICON = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200'
 
 type DashData = {
@@ -92,7 +92,7 @@ function statusBadge(state: string) {
 export default function DashboardPage() {
   const [data, setData] = useState<DashData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [today, setToday] = useState('')
+  const [today] = useState(() => new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }))
 
   async function loadData() {
     try {
@@ -108,13 +108,12 @@ export default function DashboardPage() {
   }
 
   useEffect(() => {
-    setToday(new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }))
     loadData()
   }, [])
 
   useEffect(() => {
     // Poll the dashboard every 3 seconds if there are active calls
-    if (data?.inProgressShipments || data?.recentShipments?.some((s: any) => s.state === 'CALL_SCHEDULED')) {
+    if (data?.inProgressShipments || data?.recentShipments?.some((s) => s.state === 'CALL_SCHEDULED')) {
       const interval = setInterval(loadData, 3000)
       return () => clearInterval(interval)
     }
@@ -208,9 +207,9 @@ export default function DashboardPage() {
             <div style={{ background: '#fff', border: '1px solid rgba(6,78,59,0.15)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 4px 20px -10px rgba(6,78,59,0.05)' }}>
               <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(6,78,59,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2 style={{ fontFamily: "'Instrument Serif', serif", fontSize: 24, color: '#064e3b', margin: 0 }}>Recent Shipments</h2>
-                <a href="/shipments" style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 600, color: '#064e3b', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <Link href="/shipments" style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 600, color: '#064e3b', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
                   View all <span className="material-symbols-outlined" style={{ fontSize: 16 }}>arrow_forward</span>
-                </a>
+                </Link>
               </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, fontFamily: "'Inter', sans-serif" }}>
                 <thead>

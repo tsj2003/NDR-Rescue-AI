@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -7,29 +7,31 @@ const GICON = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outline
 
 type Shipment = {
   id: string; trackingNumber: string; customerName: string; customerPhone: string
-  failureReason: string; state: string; updatedAt: string
+  failureReason: string; state: string; updatedAt: string; consentObtained: boolean
 }
 
-type NewShipment = { customerName: string; customerPhone: string; dropAddress: string; failureReason: string }
+type NewShipment = { customerName: string; customerPhone: string; dropAddress: string; failureReason: string; consentObtained: boolean }
 
 const FAILURE_REASONS = [
   'ADDRESS_NOT_FOUND',
   'CUSTOMER_NOT_AVAILABLE',
   'GATE_LOCKED',
   'REFUSED_DELIVERY',
-  'INCORRECT_ADDRESS',
-  'RESCHEDULED_BY_CUSTOMER',
+  'WRONG_ADDRESS',
+  'OTHER',
 ]
 
 const STATE_LABELS: Record<string, string> = {
   FAILED_ATTEMPT: 'Failed Attempt',
   CALL_SCHEDULED: 'Call Scheduled',
+  MANUAL_REVIEW: 'Manual Review',
   REDELIVERY_CONFIRMED: 'Recovered',
   CANCELED: 'Canceled',
 }
 const STATE_STYLE: Record<string, { bg: string; color: string; border: string }> = {
   FAILED_ATTEMPT: { bg: '#fef2f2', color: '#b91c1c', border: '#fecaca' },
   CALL_SCHEDULED: { bg: '#fffbeb', color: '#92400e', border: '#fde68a' },
+  MANUAL_REVIEW: { bg: '#f5f3ff', color: '#6d28d9', border: '#ddd6fe' },
   REDELIVERY_CONFIRMED: { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' },
   CANCELED: { bg: '#f8fafc', color: '#475569', border: '#e2e8f0' },
 }
@@ -100,18 +102,21 @@ export default function ShipmentsPage() {
   const [activeTab, setActiveTab] = useState('All')
   const [triggering, setTriggering] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
-  const [form, setForm] = useState<NewShipment>({ customerName: '', customerPhone: '', dropAddress: '', failureReason: 'ADDRESS_NOT_FOUND' })
+  const [form, setForm] = useState<NewShipment>({ customerName: '', customerPhone: '', dropAddress: '', failureReason: 'ADDRESS_NOT_FOUND', consentObtained: false })
   const [submitting, setSubmitting] = useState(false)
   const [editingPhone, setEditingPhone] = useState<{ id: string; value: string } | null>(null)
 
-  async function reloadShipments() {
+  const reloadShipments = useCallback(async () => {
     const d = await fetch('/api/shipments').then(r => r.json())
     setShipments(Array.isArray(d) ? d : d.shipments ?? [])
-  }
+  }, [])
 
   useEffect(() => {
-    reloadShipments().then(() => setLoading(false))
-  }, [])
+    const timer = window.setTimeout(() => {
+      void reloadShipments().then(() => setLoading(false))
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [reloadShipments])
 
   useEffect(() => {
     const hasActiveCall = shipments.some(s => s.state === 'CALL_SCHEDULED')
@@ -119,7 +124,7 @@ export default function ShipmentsPage() {
       const interval = setInterval(reloadShipments, 3000)
       return () => clearInterval(interval)
     }
-  }, [shipments])
+  }, [shipments, reloadShipments])
 
   async function triggerCall(shipmentId: string) {
     setTriggering(shipmentId)
@@ -143,6 +148,9 @@ export default function ShipmentsPage() {
     if (!form.customerName || !form.customerPhone || !form.dropAddress) {
       toast.error('Name, phone and address are required'); return
     }
+    if (!form.consentObtained) {
+      toast.error('Explicit customer opt-in is required before automated calls'); return
+    }
     setSubmitting(true)
     try {
       const res = await fetch('/api/shipments/create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
@@ -150,7 +158,7 @@ export default function ShipmentsPage() {
       if (res.ok) {
         toast.success(`Shipment ${data.shipment.trackingNumber} created!`)
         setShowModal(false)
-        setForm({ customerName: '', customerPhone: '', dropAddress: '', failureReason: 'ADDRESS_NOT_FOUND' })
+        setForm({ customerName: '', customerPhone: '', dropAddress: '', failureReason: 'ADDRESS_NOT_FOUND', consentObtained: false })
         await reloadShipments()
       } else {
         toast.error(data.error || 'Failed to create shipment')
@@ -179,8 +187,8 @@ export default function ShipmentsPage() {
     }
   }
 
-  const tabs = ['All', 'Failed Attempt', 'Call Scheduled', 'Recovered']
-  const stateMap: Record<string, string> = { 'Failed Attempt': 'FAILED_ATTEMPT', 'Call Scheduled': 'CALL_SCHEDULED', 'Recovered': 'REDELIVERY_CONFIRMED' }
+  const tabs = ['All', 'Failed Attempt', 'Call Scheduled', 'Manual Review', 'Recovered']
+  const stateMap: Record<string, string> = { 'Failed Attempt': 'FAILED_ATTEMPT', 'Call Scheduled': 'CALL_SCHEDULED', 'Manual Review': 'MANUAL_REVIEW', 'Recovered': 'REDELIVERY_CONFIRMED' }
 
   const filtered = shipments.filter(s => {
     const matchesSearch = !search || s.trackingNumber.toLowerCase().includes(search.toLowerCase()) || s.customerName.toLowerCase().includes(search.toLowerCase())
@@ -192,6 +200,7 @@ export default function ShipmentsPage() {
     All: shipments.length,
     'Failed Attempt': shipments.filter(s => s.state === 'FAILED_ATTEMPT').length,
     'Call Scheduled': shipments.filter(s => s.state === 'CALL_SCHEDULED').length,
+    'Manual Review': shipments.filter(s => s.state === 'MANUAL_REVIEW').length,
     'Recovered': shipments.filter(s => s.state === 'REDELIVERY_CONFIRMED').length,
   }
 
@@ -239,6 +248,18 @@ export default function ShipmentsPage() {
                   {FAILURE_REASONS.map(r => <option key={r} value={r}>{r.replace(/_/g, ' ')}</option>)}
                 </select>
               </div>
+              <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: 12, borderRadius: 10, border: '1px solid rgba(6,78,59,0.16)', background: '#fff', cursor: 'pointer' }}>
+                <input
+                  id="add-consent"
+                  type="checkbox"
+                  checked={form.consentObtained}
+                  onChange={e => setForm(f => ({ ...f, consentObtained: e.target.checked }))}
+                  style={{ marginTop: 2, width: 16, height: 16, accentColor: '#064e3b', flexShrink: 0 }}
+                />
+                <span style={{ fontSize: 12, lineHeight: 1.5, color: '#334155' }}>
+                  I confirm the customer has opted in to receive an automated AI voice call about this failed delivery, and consent timestamp should be stored.
+                </span>
+              </label>
             </div>
             <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
               <button onClick={() => setShowModal(false)}
@@ -354,9 +375,10 @@ export default function ShipmentsPage() {
                             <button
                               id={`trigger-call-${s.id}`}
                               onClick={() => triggerCall(s.id)}
-                              disabled={triggering === s.id}
-                              style={{ padding: '6px 14px', background: triggering === s.id ? '#64748b' : '#064e3b', color: '#fff', border: 'none', borderRadius: 99, fontSize: 12, fontWeight: 600, cursor: triggering === s.id ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>
-                              {triggering === s.id ? '…' : 'Trigger Call'}
+                              disabled={triggering === s.id || !s.consentObtained}
+                              title={s.consentObtained ? 'Trigger Bolna recovery call' : 'Customer opt-in required before calling'}
+                              style={{ padding: '6px 14px', background: triggering === s.id || !s.consentObtained ? '#94a3b8' : '#064e3b', color: '#fff', border: 'none', borderRadius: 99, fontSize: 12, fontWeight: 600, cursor: triggering === s.id || !s.consentObtained ? 'not-allowed' : 'pointer', whiteSpace: 'nowrap', transition: 'all 0.2s' }}>
+                              {triggering === s.id ? '…' : s.consentObtained ? 'Trigger Call' : 'Needs Consent'}
                             </button>
                           ) : (
                             <button
