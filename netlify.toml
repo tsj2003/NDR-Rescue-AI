@@ -1,5 +1,8 @@
 [build]
-  command = "npx prisma migrate deploy && npx prisma generate && next build"
+  # Migrations are applied separately against the live DB.
+  # `prisma migrate deploy` fails in GitHub Actions builds when Netlify
+  # does not inject DATABASE_URL into the local CLI build.
+  command = "npx prisma generate && next build"
   publish = ".next"
 
 [[plugins]]

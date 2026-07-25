@@ -72,8 +72,16 @@ jobs:
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          # Prisma generate needs a URL shape; runtime uses Netlify site env.
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci?schema=public
         run: |
           set -euo pipefail
-          URL=$(netlify deploy --build --prod --message "Deploy from GitHub Actions ${GITHUB_SHA::7}" --json | node -e "const d=JSON.parse(require('fs').readFileSync(0,'utf8')); process.stdout.write(d.url || d.deploy_url || '')")
+          netlify deploy --build --prod --message "Deploy from GitHub Actions ${GITHUB_SHA::7}" --json > /tmp/netlify-deploy.json
+          URL=$(node -e "const d=require('/tmp/netlify-deploy.json'); process.stdout.write(d.url || d.deploy_url || d.ssl_url || '')")
+          if [ -z "$URL" ]; then
+            echo "Deploy succeeded but no URL was returned:"
+            cat /tmp/netlify-deploy.json
+            exit 1
+          fi
           echo "url=$URL" >> "$GITHUB_OUTPUT"
           echo "Deployed to: $URL"

@@ -174,7 +174,7 @@ Create these under **Settings → Secrets and variables → Actions**:
 
 Also keep production env vars in the Netlify site settings (`DATABASE_URL`, `APP_URL`, `JWT_SECRET`, `WEBHOOK_SECRET`, Bolna keys, etc.).
 
-Build config lives in `netlify.toml` (Next.js plugin + Prisma generate).
+Build config lives in `netlify.toml` (Next.js plugin + Prisma generate). Run `npx prisma migrate deploy` against production when the schema changes — it is not part of the CI build.
 
 
 ## Verification
