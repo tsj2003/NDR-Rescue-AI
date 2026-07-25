@@ -55,9 +55,10 @@ export async function POST(req: Request) {
       }
     }
 
-    // Fire against our own webhook
+    // Fire against our own webhook via this request's origin so local
+    // simulation works even when APP_URL points at an external tunnel.
     const env = getServerEnv()
-    const webhookUrl = `${env.APP_URL}/api/webhook/bolna?secret=${env.WEBHOOK_SECRET}`
+    const webhookUrl = `${new URL(req.url).origin}/api/webhook/bolna?secret=${env.WEBHOOK_SECRET}`
 
     const response = await fetch(webhookUrl, {
       method: 'POST',

@@ -9,6 +9,7 @@ import {
   mapCallState,
   normalizeBolnaExtraction,
 } from '@/lib/recovery'
+import { sendRecoveryFollowup } from '@/lib/notifications'
 
 export async function POST(req: Request) {
   try {
@@ -109,12 +110,33 @@ export async function POST(req: Request) {
       )
 
       await prisma.$transaction(updates)
+
+      const followupResults = await sendRecoveryFollowup({
+        customerName: execution.shipment.customerName,
+        trackingNumber: execution.shipment.trackingNumber,
+        customerPhone: execution.shipment.customerPhone,
+        recoveryLink: fallback.smsFollowupLink,
+      })
+
+      await prisma.auditEvent.create({
+        data: {
+          shipmentId: execution.shipmentId,
+          event: 'FOLLOWUP_MESSAGE_ATTEMPTED',
+          details: {
+            callId,
+            provider: 'twilio',
+            results: followupResults,
+          },
+        },
+      })
+
       return NextResponse.json({
         success: true,
         fallback: {
           status: fallback.fallbackStatus,
           nextRetryAt: fallback.nextRetryAt,
           smsFollowupLink: fallback.smsFollowupLink,
+          followupResults,
         },
       })
     }

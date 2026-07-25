@@ -38,6 +38,7 @@ Back-of-the-envelope enterprise model:
 - No-answer fallback ladder:
   - mark the call as `NO_ANSWER`,
   - generate a real self-serve `/recovery/:token` SMS/WhatsApp link,
+  - send that link through Twilio SMS/WhatsApp when provider env vars are configured,
   - schedule a configurable retry,
   - move to manual review after max attempts.
 - SSE endpoint: `GET /api/call-events?shipmentId=...` for live detail-page updates.
@@ -62,6 +63,7 @@ No answer path:
   -> CallExecution.NO_ANSWER
   -> Shipment.CALL_SCHEDULED + fallbackStatus.RETRY_SCHEDULED
   -> /recovery/:token link generated
+  -> optional Twilio SMS/WhatsApp follow-up sent
   -> /api/recovery/retry-due triggers retry when due
   -> manual review after MAX_CALL_ATTEMPTS
 ```
@@ -121,6 +123,22 @@ Use this webhook URL in Bolna:
 https://your-ngrok-domain.ngrok-free.app/api/webhook/bolna?secret=WEBHOOK_SECRET
 ```
 
+## Optional SMS/WhatsApp Provider
+
+The app integrates with Twilio for demo SMS and WhatsApp follow-ups. Twilio trial accounts can be used for demos, but trial SMS recipients must be verified and WhatsApp requires joining the Twilio Sandbox first.
+
+Add these env vars:
+
+```env
+FOLLOWUP_CHANNELS="sms,whatsapp"
+TWILIO_ACCOUNT_SID="..."
+TWILIO_AUTH_TOKEN="..."
+TWILIO_SMS_FROM="+12345678900"
+TWILIO_WHATSAPP_FROM="whatsapp:+14155238886"
+```
+
+If these are absent, NDR Rescue still generates the self-serve recovery link and logs the provider attempt as skipped.
+
 ## Key Endpoints
 
 | Method | Endpoint | Purpose |
@@ -135,6 +153,29 @@ https://your-ngrok-domain.ngrok-free.app/api/webhook/bolna?secret=WEBHOOK_SECRET
 | `PATCH` | `/api/recovery/:token` | Customer self-serve recovery link |
 | `POST` | `/api/recovery/retry-due` | Cron/worker endpoint for due retries |
 | `POST` | `/api/dev/simulate-bolna-webhook` | Local completed/no-answer simulator |
+
+## CI/CD (GitHub Actions → Netlify)
+
+Workflow: `.github/workflows/ci-cd.yml`
+
+1. **Lint & unit tests** on every push/PR to `main`
+2. **Deploy to Netlify production** after CI passes on `main` pushes (and via manual `workflow_dispatch`)
+
+Live app: [https://ndrrescue.netlify.app](https://ndrrescue.netlify.app)
+
+### Required GitHub secrets
+
+Create these under **Settings → Secrets and variables → Actions**:
+
+| Secret | How to get it |
+| --- | --- |
+| `NETLIFY_AUTH_TOKEN` | [Netlify → User settings → Applications → Personal access tokens](https://app.netlify.com/user/applications#personal-access-tokens) |
+| `NETLIFY_SITE_ID` | Site configuration → Site details → Site ID (for `ndrrescue`) |
+
+Also keep production env vars in the Netlify site settings (`DATABASE_URL`, `APP_URL`, `JWT_SECRET`, `WEBHOOK_SECRET`, Bolna keys, etc.).
+
+Build config lives in `netlify.toml` (Next.js plugin + Prisma generate).
+
 
 ## Verification
 
@@ -151,6 +192,7 @@ For E2E:
 npm run dev
 npm run test:e2e
 ```
+
 
 ## Submission Checklist
 

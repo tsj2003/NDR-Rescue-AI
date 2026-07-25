@@ -11,6 +11,12 @@ const envSchema = z.object({
   CRON_SECRET: z.string().min(8).optional(),
   NO_ANSWER_RETRY_MINUTES: z.coerce.number().int().positive().default(15),
   MAX_CALL_ATTEMPTS: z.coerce.number().int().min(1).max(4).default(2),
+  FOLLOWUP_CHANNELS: z.string().default('sms,whatsapp'),
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_SMS_FROM: z.string().optional(),
+  TWILIO_MESSAGING_SERVICE_SID: z.string().optional(),
+  TWILIO_WHATSAPP_FROM: z.string().optional(),
 })
 
 export type ServerEnv = z.infer<typeof envSchema>

@@ -95,7 +95,7 @@ Click:
 
 Say:
 
-> "This answers the operational question: what if the customer does not pick up? The webhook marks the call as `NO_ANSWER`, generates a real self-serve recovery link for SMS or WhatsApp, schedules the next voice retry, and updates the UI over Server-Sent Events without a page refresh."
+> "This answers the operational question: what if the customer does not pick up? The webhook marks the call as `NO_ANSWER`, generates a real self-serve recovery link, sends it through Twilio SMS or WhatsApp when provider credentials are configured, schedules the next voice retry, and updates the UI over Server-Sent Events without a page refresh."
 
 Point to:
 
@@ -106,7 +106,7 @@ Point to:
 
 Say:
 
-> "The retry ladder is configurable with `NO_ANSWER_RETRY_MINUTES` and `MAX_CALL_ATTEMPTS`. After the final attempt, the shipment moves to `MANUAL_REVIEW` with the recovery link still open."
+> "The retry ladder is configurable with `NO_ANSWER_RETRY_MINUTES` and `MAX_CALL_ATTEMPTS`. The provider attempt is logged in the audit trail as sent, skipped, or failed. After the final attempt, the shipment moves to `MANUAL_REVIEW` with the recovery link still open."
 
 ## 4:30-5:20 — Customer Self-Serve Link
 
